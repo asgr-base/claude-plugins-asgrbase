@@ -14,6 +14,7 @@ Usage:
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -258,7 +259,41 @@ def fetch_social_metrics_for_articles(articles: list, max_workers: int = 10) -> 
     return metrics
 
 
-def calculate_engagement_score(article: dict, social_metrics: dict = None) -> tuple[float, dict]:
+def compute_observed_max(articles: list, social_metrics: dict) -> dict:
+    """
+    記事群から各指標の実測最大値を計算
+
+    Returns:
+        {"feedly": max_rate, "hatena": max_bookmarks, "hn": max_points}
+    """
+    max_feedly = 0
+    max_hatena = 0
+    max_hn = 0
+
+    for article in articles:
+        rate = article.get("engagement_rate") or article.get("engagementRate") or 0
+        if rate > max_feedly:
+            max_feedly = rate
+
+        url = extract_url(article)
+        metrics = social_metrics.get(url, {})
+        hatena = metrics.get("hatena", 0)
+        hn = metrics.get("hn", 0)
+
+        if hatena > max_hatena:
+            max_hatena = hatena
+        if hn > max_hn:
+            max_hn = hn
+
+    # 最低1を保証（0除算防止）
+    return {
+        "feedly": max(max_feedly, 1),
+        "hatena": max(max_hatena, 1),
+        "hn": max(max_hn, 1)
+    }
+
+
+def calculate_engagement_score(article: dict, social_metrics: dict = None, engagement_max: dict = None) -> tuple[float, dict]:
     """
     注目度スコアを計算 (0-100) と内訳を返す
 
@@ -267,17 +302,23 @@ def calculate_engagement_score(article: dict, social_metrics: dict = None) -> tu
     - はてなブックマーク数
     - Hacker News ポイント
 
-    スコア計算:
-    - engagementRate: 2倍して正規化（最大20点）
-    - はてブ: 1ブクマ=2点（最大50点）
-    - HN: 1ポイント=0.5点（最大50点）
+    スコア計算（ルートスケーリング）:
+    - 各指標: sqrt(実測値) / sqrt(上限値) × 配点
+    - Feedly: 配点20点、上限値 engagement_max.feedly (default: 100)
+    - はてブ: 配点50点、上限値 engagement_max.hatena (default: 500)
+    - HN: 配点50点、上限値 engagement_max.hn (default: 500)
     - 合計を100点満点にクリップ
 
     Returns:
         tuple: (総合スコア, {"feedly": x, "hatena": y, "hn": z})
     """
+    max_cfg = engagement_max or {}
+    feedly_max = max_cfg.get("feedly", 100)
+    hatena_max = max_cfg.get("hatena", 500)
+    hn_max = max_cfg.get("hn", 500)
+
     rate = article.get("engagement_rate") or article.get("engagementRate") or 0
-    feedly_score = min(rate * 2, 20)
+    feedly_score = min(math.sqrt(rate) / math.sqrt(feedly_max) * 20, 20) if rate > 0 else 0
 
     # ソーシャルメトリクス
     url = extract_url(article)
@@ -286,8 +327,8 @@ def calculate_engagement_score(article: dict, social_metrics: dict = None) -> tu
     hn_points = metrics.get("hn", 0)
     hn_id = metrics.get("hn_id", "")
 
-    hatena_score = min(hatena_count * 2, 50)  # 25ブクマで50点
-    hn_score = min(hn_points * 0.5, 50)  # 100ポイントで50点
+    hatena_score = min(math.sqrt(hatena_count) / math.sqrt(hatena_max) * 50, 50) if hatena_count > 0 else 0
+    hn_score = min(math.sqrt(hn_points) / math.sqrt(hn_max) * 50, 50) if hn_points > 0 else 0
 
     total = min(feedly_score + hatena_score + hn_score, 100)
 
@@ -524,7 +565,7 @@ def calculate_source_trust_score(article: dict, trusted_sources: dict) -> float:
     return 50  # デフォルト
 
 
-def calculate_total_score(article: dict, config: dict, category_config: dict = None, social_metrics: dict = None) -> dict:
+def calculate_total_score(article: dict, config: dict, category_config: dict = None, social_metrics: dict = None, observed_max: dict = None) -> dict:
     """
     総合スコアを計算
 
@@ -533,6 +574,7 @@ def calculate_total_score(article: dict, config: dict, category_config: dict = N
         config: 設定
         category_config: カテゴリ設定（未使用、互換性のため残す）
         social_metrics: ソーシャルメトリクス {url: {"hatena": int, "hn": int}}
+        observed_max: 実測最大値 {"feedly": x, "hatena": y, "hn": z}
 
     Returns:
         dict: 各指標のスコアと総合スコア
@@ -552,7 +594,9 @@ def calculate_total_score(article: dict, config: dict, category_config: dict = N
     synonym_groups = config.get("synonym_groups", [])
 
     # 各指標を計算（engagementは内訳も取得）
-    engagement, engagement_breakdown = calculate_engagement_score(article, social_metrics)
+    # observed_maxが渡された場合はそれを使用、なければconfig値にフォールバック
+    engagement_max = observed_max or config.get("scoring", {}).get("engagement_max", {})
+    engagement, engagement_breakdown = calculate_engagement_score(article, social_metrics, engagement_max)
     relevance, matched_keywords = calculate_relevance_score(
         article,
         keywords=global_keywords,
@@ -633,7 +677,7 @@ def deduplicate_articles(articles: list) -> list:
     return result
 
 
-def generate_markdown_report(articles: list, config: dict, output_path: str):
+def generate_markdown_report(articles: list, config: dict, output_path: str, observed_max: dict = None):
     """Markdownレポートを生成"""
     thresholds = config.get("scoring", {}).get("thresholds", {
         "must_read": 80,
@@ -664,21 +708,30 @@ def generate_markdown_report(articles: list, config: dict, output_path: str):
     lines.append("")
     lines.append("## スコアリング基準")
     lines.append("")
+    weights = config.get("scoring", {}).get("weights", {})
+    w_eng = int(weights.get("engagement", 0.60) * 100)
+    w_rel = int(weights.get("relevance", 0.40) * 100)
+
     lines.append("### 総合スコア")
     lines.append("")
     lines.append("```")
-    lines.append("総合スコア = 注目度×60% + 関連度×40%")
+    lines.append(f"総合スコア = 注目度×{w_eng}% + 関連度×{w_rel}%")
     lines.append("```")
     lines.append("")
     lines.append(f"**ライン引き**: MUST READ≧{thresholds['must_read']} / SHOULD READ≧{thresholds['should_read']} / OPTIONAL≧{thresholds['optional']}")
     lines.append("")
+    obs = observed_max or {}
+    feedly_max = obs.get("feedly", 1)
+    hatena_max = obs.get("hatena", 1)
+    hn_max = obs.get("hn", 1)
+
     lines.append("### 注目度 (0-100)")
     lines.append("")
-    lines.append("| 指標 | 計算式 | 上限 |")
-    lines.append("|------|--------|------|")
-    lines.append("| Feedly | engagementRate × 2 | 20点 |")
-    lines.append("| はてブ | ブックマーク数 × 2 | 50点 |")
-    lines.append("| HN | points × 0.5 | 50点 |")
+    lines.append("| 指標 | 計算式 | 配点 | 今日の最大値 |")
+    lines.append("|------|--------|------|------------|")
+    lines.append(f"| Feedly | sqrt(rate) / sqrt({feedly_max}) × 20 | 20点 | rate={feedly_max} |")
+    lines.append(f"| はてブ | sqrt(数) / sqrt({hatena_max}) × 50 | 50点 | {hatena_max}ブクマ |")
+    lines.append(f"| HN | sqrt(pts) / sqrt({hn_max}) × 50 | 50点 | {hn_max}pts |")
     lines.append("")
     lines.append("```")
     lines.append("注目度 = min(Feedly + はてブ + HN, 100)")
@@ -819,6 +872,10 @@ def main():
     # ソーシャルメトリクス取得（はてブ + HN）
     social_metrics = fetch_social_metrics_for_articles(articles)
 
+    # 実測最大値を計算（ルートスケーリングの分母に使用）
+    observed_max = compute_observed_max(articles, social_metrics)
+    print(f"  → 実測最大値: Feedly={observed_max['feedly']}, はてブ={observed_max['hatena']}, HN={observed_max['hn']}", file=sys.stderr)
+
     # スコアリング
     thresholds = config.get("scoring", {}).get("thresholds", {
         "must_read": 80,
@@ -831,7 +888,7 @@ def main():
         cat_slug = article.get("_category_slug", "")
         cat_config = category_configs.get(cat_slug, {})
 
-        scores = calculate_total_score(article, config, cat_config, social_metrics)
+        scores = calculate_total_score(article, config, cat_config, social_metrics, observed_max)
         article["_scores"] = scores
 
         # ペイウォール付きドメインの判定
@@ -848,7 +905,7 @@ def main():
     articles.sort(key=lambda x: -x.get("_scores", {}).get("total", 0))
 
     # レポート生成
-    count = generate_markdown_report(articles, config, output_path)
+    count = generate_markdown_report(articles, config, output_path, observed_max)
     print(f"Report generated: {output_path} ({count} articles)", file=sys.stderr)
 
 
