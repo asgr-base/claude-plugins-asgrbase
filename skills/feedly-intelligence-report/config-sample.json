@@ -21,9 +21,9 @@
       "relevance": 0.40
     },
     "thresholds": {
-      "must_read": 55,
-      "should_read": 45,
-      "optional": 35
+      "must_read_pct": 5,
+      "should_read_pct": 20,
+      "optional_pct": 50
     }
   },
 
@@ -51,7 +51,9 @@
   "deduplication": {
     "title_similarity_threshold": 0.7,
     "content_similarity_threshold": 0.8,
-    "time_window_hours": 48
+    "time_window_hours": 48,
+    "history_file": "~/.feedly/article_history.json",
+    "history_days": 7
   },
 
   "report": {

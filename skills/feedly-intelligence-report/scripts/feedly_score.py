@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -153,6 +154,95 @@ def normalize_title(title: str) -> str:
         if sep in title:
             title = title.split(sep)[0]
     return title.strip()[:50].lower()
+
+
+# =============================================================================
+# 記事履歴（日をまたぐ重複除去）
+# =============================================================================
+
+def url_hash(url: str) -> str:
+    """URLをSHA-256の先頭12文字にハッシュ化"""
+    return hashlib.sha256(url.encode()).hexdigest()[:12]
+
+
+def load_article_history(history_file: str, max_days: int = 3) -> dict:
+    """
+    記事履歴を読み込み、古いエントリをプルーニング
+
+    Args:
+        history_file: 履歴ファイルパス
+        max_days: 保持する最大日数
+
+    Returns:
+        {"2026-02-11": ["hash1", "hash2", ...], ...}
+    """
+    path = expand_path(history_file)
+    if not path.exists():
+        return {}
+
+    try:
+        history = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+    # 今日の日付は除外（再実行時の自己排除を防ぐ）、古いエントリも削除
+    today = datetime.now().strftime("%Y-%m-%d")
+    cutoff = (datetime.now() - timedelta(days=max_days)).strftime("%Y-%m-%d")
+    return {date: hashes for date, hashes in history.items() if date >= cutoff and date != today}
+
+
+def save_article_history(history_file: str, articles: list, existing_history: dict):
+    """
+    今日の記事URLハッシュを履歴に追加して保存
+
+    Args:
+        history_file: 履歴ファイルパス
+        articles: レポートに含まれた記事リスト
+        existing_history: 既存の履歴データ
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_hashes = []
+    for article in articles:
+        url = extract_url(article)
+        if url:
+            today_hashes.append(url_hash(url))
+
+    existing_history[today] = today_hashes
+
+    path = expand_path(history_file)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(existing_history, ensure_ascii=False))
+
+
+def filter_previously_reported(articles: list, history: dict) -> tuple[list, int]:
+    """
+    過去のレポートに含まれた記事を除外
+
+    Args:
+        articles: 記事リスト
+        history: 日付別URLハッシュ辞書
+
+    Returns:
+        (フィルタ後の記事リスト, 除外された件数)
+    """
+    if not history:
+        return articles, 0
+
+    # 全日付のハッシュを1つのsetに統合
+    known_hashes = set()
+    for hashes in history.values():
+        known_hashes.update(hashes)
+
+    filtered = []
+    excluded = 0
+    for article in articles:
+        url = extract_url(article)
+        if url and url_hash(url) in known_hashes:
+            excluded += 1
+        else:
+            filtered.append(article)
+
+    return filtered, excluded
 
 
 # =============================================================================
@@ -631,6 +721,57 @@ def categorize_priority(score: float, thresholds: dict) -> str:
         return "SKIP"
 
 
+def compute_dynamic_thresholds(articles: list, threshold_config: dict) -> dict:
+    """
+    記事スコア分布から動的にしきい値を算出
+
+    スコア降順で上位X%をMUST READ、上位Y%までをSHOULD READ、
+    上位Z%までをOPTIONALとする。ペイウォール記事は除外して計算。
+
+    Args:
+        articles: スコア計算済み記事リスト
+        threshold_config: {"must_read_pct": 5, "should_read_pct": 20, "optional_pct": 50}
+
+    Returns:
+        {"must_read": float, "should_read": float, "optional": float}
+    """
+    must_read_pct = threshold_config.get("must_read_pct", 5)
+    should_read_pct = threshold_config.get("should_read_pct", 20)
+    optional_pct = threshold_config.get("optional_pct", 50)
+
+    # ペイウォール以外の記事のスコアを降順ソート
+    scores = sorted(
+        [a["_scores"]["total"] for a in articles if a.get("_priority") != "PAYWALLED"],
+        reverse=True
+    )
+
+    if not scores:
+        return {"must_read": 80, "should_read": 60, "optional": 40}
+
+    n = len(scores)
+
+    def percentile_score(pct):
+        """上位pct%の境界スコアを返す"""
+        idx = min(int(n * pct / 100), n - 1)
+        return scores[idx]
+
+    must_read_t = percentile_score(must_read_pct)
+    should_read_t = percentile_score(should_read_pct)
+    optional_t = percentile_score(optional_pct)
+
+    # しきい値の順序を保証（同値の場合、上位カテゴリを狭める）
+    if must_read_t <= should_read_t:
+        must_read_t = should_read_t + 0.1
+    if should_read_t <= optional_t:
+        should_read_t = optional_t + 0.1
+
+    return {
+        "must_read": round(must_read_t, 1),
+        "should_read": round(should_read_t, 1),
+        "optional": round(optional_t, 1)
+    }
+
+
 def deduplicate_articles(articles: list) -> list:
     """タイトルの正規化とURL一致で重複を除去（高スコアを優先）"""
     seen_titles = {}
@@ -677,13 +818,14 @@ def deduplicate_articles(articles: list) -> list:
     return result
 
 
-def generate_markdown_report(articles: list, config: dict, output_path: str, observed_max: dict = None):
+def generate_markdown_report(articles: list, config: dict, output_path: str, observed_max: dict = None, thresholds: dict = None):
     """Markdownレポートを生成"""
-    thresholds = config.get("scoring", {}).get("thresholds", {
-        "must_read": 80,
-        "should_read": 60,
-        "optional": 40
-    })
+    if thresholds is None:
+        thresholds = config.get("scoring", {}).get("thresholds", {
+            "must_read": 80,
+            "should_read": 60,
+            "optional": 40
+        })
 
     # 優先度別にグループ化
     priority_groups = defaultdict(list)
@@ -718,7 +860,14 @@ def generate_markdown_report(articles: list, config: dict, output_path: str, obs
     lines.append(f"総合スコア = 注目度×{w_eng}% + 関連度×{w_rel}%")
     lines.append("```")
     lines.append("")
-    lines.append(f"**ライン引き**: MUST READ≧{thresholds['must_read']} / SHOULD READ≧{thresholds['should_read']} / OPTIONAL≧{thresholds['optional']}")
+    threshold_config = config.get("scoring", {}).get("thresholds", {})
+    if "must_read_pct" in threshold_config:
+        must_pct = threshold_config["must_read_pct"]
+        should_pct = threshold_config["should_read_pct"]
+        optional_pct = threshold_config["optional_pct"]
+        lines.append(f"**ライン引き（動的）**: MUST READ: 上位{must_pct}%（≧{thresholds['must_read']}） / SHOULD READ: 上位{should_pct}%（≧{thresholds['should_read']}） / OPTIONAL: 上位{optional_pct}%（≧{thresholds['optional']}）")
+    else:
+        lines.append(f"**ライン引き**: MUST READ≧{thresholds['must_read']} / SHOULD READ≧{thresholds['should_read']} / OPTIONAL≧{thresholds['optional']}")
     lines.append("")
     obs = observed_max or {}
     feedly_max = obs.get("feedly", 1)
@@ -825,6 +974,68 @@ def generate_markdown_report(articles: list, config: dict, output_path: str, obs
     return len(articles)
 
 
+def output_recommendation_candidates(articles: list, output_path: str, max_candidates: int = 50) -> tuple[str, int]:
+    """
+    Recommendation候補記事をJSON出力
+
+    OPTIONAL/SKIPの記事から、Claude Codeが選定するための候補情報を出力。
+    タイトル・URL・本文スニペット・ソース名を含む。
+
+    Args:
+        articles: スコア計算済み記事リスト
+        output_path: レポート出力パス（候補ファイルパスを導出）
+        max_candidates: 最大候補数
+
+    Returns:
+        (候補ファイルパス, 候補数)
+    """
+    candidates = []
+    for article in articles:
+        priority = article.get("_priority", "")
+        if priority not in ("OPTIONAL", "SKIP"):
+            continue
+
+        title = article.get("title", "No Title")
+        url = extract_url(article)
+
+        content_raw = article.get("content", "")
+        if isinstance(content_raw, dict):
+            content = content_raw.get("content", "")
+        else:
+            content = str(content_raw)
+
+        # HTMLタグを除去して先頭200文字
+        content_text = re.sub(r'<[^>]+>', '', content).strip()[:200]
+
+        source = article.get("source", {}).get("title", "")
+        if not source:
+            source = article.get("origin", {}).get("title", "")
+
+        category = article.get("_category_name", "")
+
+        candidates.append({
+            "title": title,
+            "url": url,
+            "snippet": content_text,
+            "source": source,
+            "category": category,
+            "priority": priority,
+            "score": article.get("_scores", {}).get("total", 0)
+        })
+
+    # スコア順でソート（OPTIONALの上位 + SKIPの上位を混ぜる）
+    candidates.sort(key=lambda x: -x["score"])
+    candidates = candidates[:max_candidates]
+
+    # レポートパスから候補ファイルパスを生成
+    candidates_path = output_path.replace("_feeds-report.md", "_recommendation-candidates.json")
+
+    path = expand_path(candidates_path)
+    path.write_text(json.dumps(candidates, ensure_ascii=False, indent=2))
+
+    return candidates_path, len(candidates)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Score Feedly articles based on multiple metrics")
     parser.add_argument(
@@ -876,12 +1087,7 @@ def main():
     observed_max = compute_observed_max(articles, social_metrics)
     print(f"  → 実測最大値: Feedly={observed_max['feedly']}, はてブ={observed_max['hatena']}, HN={observed_max['hn']}", file=sys.stderr)
 
-    # スコアリング
-    thresholds = config.get("scoring", {}).get("thresholds", {
-        "must_read": 80,
-        "should_read": 60,
-        "optional": 40
-    })
+    # Phase 1: スコアリング
     paywalled_domains = config.get("paywalled_domains", [])
 
     for article in articles:
@@ -891,22 +1097,51 @@ def main():
         scores = calculate_total_score(article, config, cat_config, social_metrics, observed_max)
         article["_scores"] = scores
 
-        # ペイウォール付きドメインの判定
+        # ペイウォール付きドメインを先にマーク
         if is_paywalled(article, paywalled_domains):
             article["_priority"] = "PAYWALLED"
-        else:
-            article["_priority"] = categorize_priority(scores["total"], thresholds)
 
-    # 重複除去
+    # Phase 2: 重複除去（バッチ内）
     articles = deduplicate_articles(articles)
     print(f"After deduplication: {len(articles)} articles", file=sys.stderr)
 
-    # 総合スコアでソート
+    # Phase 3: 過去レポートとの重複除去（日をまたぐ）
+    dedup_config = config.get("deduplication", {})
+    history_file = dedup_config.get("history_file", "~/.feedly/article_history.json")
+    history_days = dedup_config.get("history_days", 3)
+    article_history = load_article_history(history_file, history_days)
+
+    if article_history:
+        articles, excluded_count = filter_previously_reported(articles, article_history)
+        print(f"  → 過去レポート重複除去: {excluded_count}件除外（残り{len(articles)}件）", file=sys.stderr)
+
+    # Phase 4: しきい値算出と優先度分類
+    threshold_config = config.get("scoring", {}).get("thresholds", {})
+    if "must_read_pct" in threshold_config:
+        thresholds = compute_dynamic_thresholds(articles, threshold_config)
+        print(f"  → 動的しきい値: MUST READ≧{thresholds['must_read']}, SHOULD READ≧{thresholds['should_read']}, OPTIONAL≧{thresholds['optional']}", file=sys.stderr)
+    else:
+        thresholds = threshold_config
+
+    for article in articles:
+        if article.get("_priority") != "PAYWALLED":
+            article["_priority"] = categorize_priority(article["_scores"]["total"], thresholds)
+
+    # Phase 5: ソートとレポート生成
     articles.sort(key=lambda x: -x.get("_scores", {}).get("total", 0))
 
-    # レポート生成
-    count = generate_markdown_report(articles, config, output_path, observed_max)
+    count = generate_markdown_report(articles, config, output_path, observed_max, thresholds)
     print(f"Report generated: {output_path} ({count} articles)", file=sys.stderr)
+
+    # Phase 6: Recommendation候補出力
+    candidates_path, candidates_count = output_recommendation_candidates(articles, output_path)
+    print(f"  → Recommendation candidates: {candidates_path} ({candidates_count} articles)", file=sys.stderr)
+
+    # Phase 7: 記事履歴を保存
+    save_article_history(history_file, articles, article_history)
+    today_count = len([a for a in articles if extract_url(a)])
+    total_history = sum(len(h) for h in article_history.values())
+    print(f"  → 履歴保存: 本日{today_count}件追加（全{total_history}件, {len(article_history)}日分）", file=sys.stderr)
 
 
 if __name__ == "__main__":
