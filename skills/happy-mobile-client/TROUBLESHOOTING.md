@@ -344,28 +344,39 @@ renice -n 10 $(pgrep happy)
 
 ### 音声入力が機能しない
 
-**症状**: 音声コーディングができない
+**症状**: 音声コーディング・Voice Agentが使えない
+
+**Voice Agentの技術構成**:
+- STT（音声→テキスト）: Eleven Labs（クラウド処理）
+- TTS（テキスト→音声）: Eleven Labs（クラウド処理）
+- 中間処理: Claude Sonnet 4（Voice Agent）
 
 **チェックリスト**:
 
 1. **マイクの権限**
    - iOS: 設定 > Happy > マイク > 許可
    - Android: 設定 > アプリ > Happy > 権限 > マイク
-
-2. **ネットワーク接続**
-   - 音声認識にはインターネット接続が必要
-
+2. **インターネット接続（必須）**
+   - STT/TTSはEleven Labs経由のためオフラインでは動作しない
+   - Wi-Fi/モバイルデータ接続を確認
 3. **言語設定**
-   - アプリ内設定で正しい言語を選択
+   - アプリ内設定で正しい言語を選択（日本語/英語）
+4. **音声読み上げ（TTS）が聞こえない場合**
+   - スマホの音量を確認
+   - サイレントモード/マナーモードを解除
+   - Bluetooth接続デバイスの確認
 
 **解決策**:
 
 ```bash
-# macOS側でも音声入力をテスト
-happy --voice-test
-
-# マイクデバイスを確認
+# マイクデバイスを確認（macOS側で問題切り分け）
 system_profiler SPAudioDataType
+
+# ネットワーク接続を確認
+ping google.com
+
+# Happyを再起動
+pkill -f happy && happy
 ```
 
 ### プッシュ通知が届かない
@@ -543,4 +554,4 @@ DEBUG=* happy --verbose
 
 ---
 
-**Last Updated**: 2026-01-15
+**Last Updated**: 2026-02-11

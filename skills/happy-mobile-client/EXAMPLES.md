@@ -46,15 +46,20 @@ happy -m sonnet
 ### 3. パーミッションモードの使い分け
 
 ```bash
-# 自動承認モード（信頼できる操作のみ）
-happy -p auto
+# 編集自動承認モード（信頼できる操作のみ）
+happy --permission-mode acceptEdits
 
 # デフォルトモード（都度確認）
-happy -p default
+happy --permission-mode default
 
 # プランモード（実行前に計画確認）
-happy -p plan
+happy --permission-mode plan
+
+# 全権限スキップ（--dangerously-skip-permissions のショートカット）
+happy --yolo
 ```
+
+**注意**: `-p` は Claude Code の `--print`（非対話モード）のショートカットであり、パーミッション設定ではない。
 
 ## 実践シナリオ
 
@@ -66,7 +71,7 @@ happy -p plan
 ```bash
 cd ~/projects/myapp
 git checkout feature/new-login-flow
-happy -p default
+happy --permission-mode default
 ```
 
 **スマホ側**:
@@ -95,7 +100,7 @@ Claude Codeの応答:
 **Mac側（常時起動）**:
 ```bash
 cd ~/projects/production-app
-happy -m opus -p plan
+happy -m opus --permission-mode plan
 ```
 
 **スマホ側**:
@@ -170,7 +175,7 @@ Happyアプリでセッション一覧:
 **セットアップ**:
 ```bash
 cd ~/projects/myapp
-happy -m sonnet -p auto
+happy -m sonnet --yolo
 ```
 
 **スマホ側（音声のみ）**:
@@ -255,7 +260,7 @@ happy
 ```bash
 # ドライバー（Mac側）
 cd ~/projects/pair-session
-happy -p plan
+happy --permission-mode plan
 
 # ナビゲーター（スマホ側）
 # 画面を見ながら指示を出す
@@ -320,14 +325,14 @@ happy -m opus  # アーキテクチャ設計、複雑なバグ修正
 ### 3. パーミッションモードの使い分け
 
 ```bash
-# 信頼できる操作: auto
-happy -p auto  # ファイル作成、コメント追加
-
-# 重要な操作: default
-happy -p default  # コード変更、削除
+# 編集のみ自動承認（おすすめ）
+happy --permission-mode acceptEdits  # ファイル編集は自動、他は確認
 
 # 慎重な操作: plan
-happy -p plan  # DB変更、デプロイ、重大な変更
+happy --permission-mode plan         # DB変更、デプロイ、重大な変更
+
+# 全自動（信頼できる環境のみ）
+happy --yolo                         # すべて自動承認
 ```
 
 ### 4. セキュリティ
@@ -404,4 +409,4 @@ Happyを使うことで：
 
 ---
 
-**Last Updated**: 2026-01-15
+**Last Updated**: 2026-02-11

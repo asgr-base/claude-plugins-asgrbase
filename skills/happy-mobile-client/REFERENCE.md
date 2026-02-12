@@ -67,15 +67,35 @@ const decrypted = nacl.secretbox.open(encrypted, nonce, sharedKey);
 # モデル選択
 happy -m, --model <model>      # sonnet, opus, haiku
 
-# パーミッションモード
-happy -p, --permission-mode <mode>  # auto, default, plan
+# パーミッションモード（注意: -p は --print のショートカット。パーミッションには使えない）
+happy --permission-mode <mode>  # default, acceptEdits, plan, bypassPermissions, delegate, dontAsk
+
+# 全権限スキップ（--dangerously-skip-permissions のショートカット）
+happy --yolo
+
+# 前回セッションの再開
+happy --resume
 
 # バージョン確認
 happy --version
 
 # ヘルプ表示
 happy --help
+
+# システム診断
+happy doctor
 ```
+
+**パーミッションモード一覧**:
+
+| モード | 説明 |
+|--------|------|
+| `default` | 都度確認（デフォルト） |
+| `acceptEdits` | ファイル編集を自動承認 |
+| `plan` | コード変更前にプラン確認 |
+| `bypassPermissions` | すべて自動承認（`--yolo` と同等） |
+| `delegate` | 委譲モード |
+| `dontAsk` | 確認なし |
 
 ### 環境変数設定
 
@@ -112,7 +132,23 @@ happy codex
 
 # Codexにオプションを指定
 happy codex -m opus
-happy codex -p plan
+happy codex --permission-mode plan
+```
+
+### Gemini統合（ACP）
+
+```bash
+# Gemini経由で起動
+happy gemini
+```
+
+### デーモンモード
+
+PCから離れていてもスマホから新しいセッションを起動可能：
+
+```bash
+# バックグラウンドサービスとして起動
+happy daemon
 ```
 
 ## 更新とメンテナンス
@@ -459,13 +495,42 @@ happy --trace-api
 - オフライン時は送信キューに追加
 - オンライン復帰時に自動送信
 
-### 音声コーディングの設定
+### 音声機能（Voice Agent）
 
-モバイルアプリ内で音声認識の精度を調整：
+Happyの音声機能は単純なSTTではなく、**Voice Agent**による双方向の音声会話システム。
+
+#### アーキテクチャ
+
+```
+スマホ(マイク) → [Eleven Labs STT] → Voice Agent(Claude Sonnet 4) → Claude Code
+スマホ(スピーカー) ← [Eleven Labs TTS] ← Voice Agent(Claude Sonnet 4) ←┘
+```
+
+#### コンポーネント
+
+| コンポーネント | 技術 | 役割 |
+|---------------|------|------|
+| **STT** | Eleven Labs | 音声→テキスト変換 |
+| **TTS** | Eleven Labs | テキスト→音声読み上げ |
+| **Voice Agent** | Claude Sonnet 4 | 発話の整理・構造化、Claude Codeへのプロンプト変換 |
+
+#### Voice Agentの特性
+
+- Claude Codeセッションとは**独立したコンテキスト**を保持
+- ユーザーの「あのー」「えっと」等のフィラーワードを除去し、構造化されたプロンプトに変換
+- コーディングのアイデアをブレストし、実行に移す前に反復する用途に最適
+- Claude Codeの生コード出力を読み上げるのではなく、**会話的に応答を返す**
+
+#### 音声設定（アプリ内）
 
 - **言語**: 日本語/英語の切り替え
 - **音声入力モード**: 連続/プッシュトーク
 - **ノイズキャンセリング**: ON/OFF
+
+#### 制約事項
+
+- STT/TTSはEleven Labs経由のため**インターネット接続が必須**
+- 完全ローカル処理は不可（ローカルSTT/TTSが必要な場合はVoiceMode MCPを検討）
 
 ### プッシュ通知のカスタマイズ
 
@@ -563,4 +628,4 @@ happy --plugin ~/.happy/plugins/custom-plugin.js
 
 ---
 
-**Last Updated**: 2026-01-15
+**Last Updated**: 2026-02-11
