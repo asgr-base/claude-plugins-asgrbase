@@ -951,9 +951,48 @@ def generate_markdown_report(articles: list, config: dict, output_path: str, obs
 
         lines.append("")
 
-    # 統計
+    # Recommendation候補セクション（OPTIONAL/SKIPから上位10件）
+    recommendation_candidates = []
+    for article in articles:
+        priority = article.get("_priority", "")
+        if priority not in ("OPTIONAL", "SKIP"):
+            continue
+        title = article.get("title", "No Title")[:80].replace("|", "｜")
+        url = extract_url(article)
+        content_raw = article.get("content", "")
+        if isinstance(content_raw, dict):
+            content = content_raw.get("content", "")
+        else:
+            content = str(content_raw)
+        snippet = re.sub(r'<[^>]+>', '', content).strip()[:100].replace("|", "｜").replace("\n", " ")
+        source = article.get("source", {}).get("title", "") or article.get("origin", {}).get("title", "")
+        source = source[:30].replace("|", "｜")
+        recommendation_candidates.append({
+            "title": title, "url": url, "snippet": snippet, "source": source,
+            "score": article.get("_scores", {}).get("total", 0)
+        })
+    recommendation_candidates.sort(key=lambda x: -x["score"])
+    recommendation_candidates = recommendation_candidates[:10]
+
+    if recommendation_candidates:
+        lines.append("## Recommendation候補 (AI選定待ち)")
+        lines.append("")
+        lines.append("OPTIONAL/SKIPから、独自の視点で注目に値する記事をAIが5件程度選定してください。")
+        lines.append("選定後、このセクションを `## Recommendation (N件)` に書き換えてください。")
+        lines.append("")
+        lines.append("| # | 記事 | スコア | ソース | スニペット |")
+        lines.append("|---|------|--------|--------|-----------|")
+        for i, c in enumerate(recommendation_candidates, 1):
+            if c["url"]:
+                lines.append(f"| {i} | [{c['title']}]({c['url']}) | {c['score']} | {c['source']} | {c['snippet']} |")
+            else:
+                lines.append(f"| {i} | {c['title']} | {c['score']} | {c['source']} | {c['snippet']} |")
+        lines.append("")
+
     lines.append("---")
     lines.append("")
+
+    # 統計
     lines.append("## 統計")
     lines.append("")
     lines.append("| 優先度 | 件数 |")
