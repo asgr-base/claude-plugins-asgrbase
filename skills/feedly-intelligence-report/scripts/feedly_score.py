@@ -1013,67 +1013,6 @@ def generate_markdown_report(articles: list, config: dict, output_path: str, obs
     return len(articles)
 
 
-def output_recommendation_candidates(articles: list, output_path: str, max_candidates: int = 50) -> tuple[str, int]:
-    """
-    Recommendation候補記事をJSON出力
-
-    OPTIONAL/SKIPの記事から、Claude Codeが選定するための候補情報を出力。
-    タイトル・URL・本文スニペット・ソース名を含む。
-
-    Args:
-        articles: スコア計算済み記事リスト
-        output_path: レポート出力パス（候補ファイルパスを導出）
-        max_candidates: 最大候補数
-
-    Returns:
-        (候補ファイルパス, 候補数)
-    """
-    candidates = []
-    for article in articles:
-        priority = article.get("_priority", "")
-        if priority not in ("OPTIONAL", "SKIP"):
-            continue
-
-        title = article.get("title", "No Title")
-        url = extract_url(article)
-
-        content_raw = article.get("content", "")
-        if isinstance(content_raw, dict):
-            content = content_raw.get("content", "")
-        else:
-            content = str(content_raw)
-
-        # HTMLタグを除去して先頭200文字
-        content_text = re.sub(r'<[^>]+>', '', content).strip()[:200]
-
-        source = article.get("source", {}).get("title", "")
-        if not source:
-            source = article.get("origin", {}).get("title", "")
-
-        category = article.get("_category_name", "")
-
-        candidates.append({
-            "title": title,
-            "url": url,
-            "snippet": content_text,
-            "source": source,
-            "category": category,
-            "priority": priority,
-            "score": article.get("_scores", {}).get("total", 0)
-        })
-
-    # スコア順でソート（OPTIONALの上位 + SKIPの上位を混ぜる）
-    candidates.sort(key=lambda x: -x["score"])
-    candidates = candidates[:max_candidates]
-
-    # レポートパスから候補ファイルパスを生成
-    candidates_path = output_path.replace("_feeds-report.md", "_recommendation-candidates.json")
-
-    path = expand_path(candidates_path)
-    path.write_text(json.dumps(candidates, ensure_ascii=False, indent=2))
-
-    return candidates_path, len(candidates)
-
 
 def main():
     parser = argparse.ArgumentParser(description="Score Feedly articles based on multiple metrics")
@@ -1172,11 +1111,7 @@ def main():
     count = generate_markdown_report(articles, config, output_path, observed_max, thresholds)
     print(f"Report generated: {output_path} ({count} articles)", file=sys.stderr)
 
-    # Phase 6: Recommendation候補出力
-    candidates_path, candidates_count = output_recommendation_candidates(articles, output_path)
-    print(f"  → Recommendation candidates: {candidates_path} ({candidates_count} articles)", file=sys.stderr)
-
-    # Phase 7: 記事履歴を保存
+    # Phase 6: 記事履歴を保存
     save_article_history(history_file, articles, article_history)
     today_count = len([a for a in articles if extract_url(a)])
     total_history = sum(len(h) for h in article_history.values())
