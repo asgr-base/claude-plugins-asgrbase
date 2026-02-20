@@ -53,6 +53,8 @@ cp -r agent-skills/skills/jp-law-verification ~/.claude/skills/
 | [claude-mem-guide](skills/claude-mem-guide/) | claude-memプラグインのセットアップ・トラブルシューティング | - |
 | [claude-skill-creation-guide](skills/claude-skill-creation-guide/) | Agent Skillsの作成・管理ガイド | 2.1.0 |
 | [claude-insight-reflect](skills/claude-insight-reflect/) | Insightレポート生成・翻訳・CLAUDE.md反映 | - |
+| [claude-rename-for-cursor](skills/claude-rename-for-cursor/) | Cursor拡張でのセッションリネーム | - |
+| [claude-sessions-sync](skills/claude-sessions-sync/) | 全クライアント間のセッション一覧同期 | - |
 
 ### ドキュメント変換
 
@@ -80,6 +82,8 @@ agent-skills/
 │   ├── claude-insight-reflect/
 │   ├── claude-md-guide/
 │   ├── claude-mem-guide/
+│   ├── claude-rename-for-cursor/
+│   ├── claude-sessions-sync/
 │   ├── claude-skill-creation-guide/
 │   ├── feedly-intelligence-report/
 │   ├── happy-mobile-client/
