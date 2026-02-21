@@ -1,6 +1,6 @@
-# claude-rename-for-cursor
+# claude-rename
 
-Rename the current Claude Code session from Cursor extension, where the built-in `/rename` command is unavailable.
+Rename the current Claude Code session in environments where the built-in `/rename` command is unavailable.
 
 ## Problem
 
@@ -8,7 +8,7 @@ Claude Code CLI provides a `/rename` command to give sessions human-readable nam
 
 ## Solution
 
-This skill registers as `/claude-rename-for-cursor` in Claude Code's skill system, providing the same session renaming functionality through the Skill tool interface.
+This skill registers as `/claude-rename` in Claude Code's skill system, providing session renaming functionality through the Skill tool interface.
 
 ## How It Works
 
@@ -21,7 +21,7 @@ The Cursor extension reads `custom-title` entries directly from JSONL files (not
 ## Usage
 
 ```
-/claude-rename-for-cursor my-session-name
+/claude-rename my-session-name
 ```
 
 If no name is provided, the skill will prompt you interactively.
@@ -29,13 +29,13 @@ If no name is provided, the skill will prompt you interactively.
 ## Installation
 
 ```bash
-cp -r claude-rename-for-cursor ~/.claude/skills/
+cp -r claude-rename ~/.claude/skills/
 ```
 
 Or create a symlink:
 
 ```bash
-ln -s /path/to/claude-rename-for-cursor ~/.claude/skills/claude-rename-for-cursor
+ln -s /path/to/claude-rename ~/.claude/skills/claude-rename
 ```
 
 ## Requirements
@@ -46,7 +46,7 @@ ln -s /path/to/claude-rename-for-cursor ~/.claude/skills/claude-rename-for-curso
 ## File Structure
 
 ```
-claude-rename-for-cursor/
+claude-rename/
 ├── SKILL.md                    # Skill definition
 ├── README.md                   # This file
 └── scripts/
