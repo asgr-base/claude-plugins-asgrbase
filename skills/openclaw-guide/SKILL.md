@@ -1,6 +1,6 @@
 ---
 name: openclaw-guide
-description: Guide for OpenClaw self-hosted AI agent setup, security hardening, and operation. Covers installation, configuration, vulnerability mitigation (CVE-2026-25253/25157/24763), ClawHub skill safety, backup strategies, and monitoring. Use when user asks about OpenClaw, Clawdbot, Moltbot setup, security, hardening, or troubleshooting.
+description: Guide for OpenClaw self-hosted AI agent setup, security hardening, and operation. Covers installation, configuration, vulnerability mitigation (CVE-2026-25253/25157/24763), ClawHub skill safety, backup strategies, device pairing (1008 error), Mac mini server setup, and monitoring. Use when user asks about OpenClaw, Clawdbot, Moltbot setup, security, hardening, troubleshooting, 1008 pairing required error, or device approval.
 ---
 
 # OpenClaw Guide
@@ -11,6 +11,7 @@ OpenClaw is a self-hosted autonomous AI agent (MIT license) that bridges LLM pro
 
 | Problem | Solution |
 |---------|----------|
+| `1008: pairing required` | `openclaw devices list` → `openclaw devices approve <ID>` |
 | Exposed to internet | Set `gateway.bind: "loopback"`, use Tailscale |
 | Unknown CVEs unpatched | Update to v2026.2.1+, run `openclaw security audit --deep` |
 | Malicious ClawHub skill | Block external skills, use `mcp-scan` before install |
@@ -19,6 +20,10 @@ OpenClaw is a self-hosted autonomous AI agent (MIT license) that bridges LLM pro
 | Docker escape risk | Use gVisor, `--cap-drop ALL`, non-root, read-only rootfs |
 | DM from unknown sender | Set `dmPolicy: "pairing"` or `"allowlist"` |
 | Prompt injection via email | Use read-only "reader" agent for untrusted content |
+| Gateway won't start | Kill zombie process: `lsof -ti :18789 \| xargs kill -9` |
+| `openclaw: command not found` | Use full path: `/opt/homebrew/bin/node .../openclaw/dist/index.js` |
+| Check health | `curl -s http://localhost:18789/health` |
+| View logs | `tail -n 50 /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log` |
 
 ## Architecture Overview
 
@@ -124,6 +129,89 @@ tailscale serve https / http://127.0.0.1:18789
 
 # NEVER use Tailscale Funnel for OpenClaw (public exposure)
 ```
+
+## Web UI Access
+
+```
+# Local (same machine)
+http://localhost:18789/?token=<your-token>
+
+# Via Tailscale Serve (remote)
+https://<hostname>.tailnet-name.ts.net/?token=<your-token>
+```
+
+The first access from any browser requires Device Pairing (see below).
+
+## Device Pairing (1008 Error)
+
+When accessing from a new browser/device, you see: `disconnected (1008): pairing required`
+
+**How it works**: Each browser stores a unique device ID in localStorage. Unverified devices are rejected by the Gateway.
+
+- Chrome and Chrome Canary use separate localStorage → treated as different devices
+- Clearing localStorage generates a new device ID → re-pairing required
+- Pairing requests **expire after 5 minutes**
+
+**Approval steps**:
+
+```bash
+# 1. List pending devices
+openclaw devices list
+
+# 2. Approve by Request ID
+openclaw devices approve <Request-ID>
+# → "Approved" means success
+
+# 3. Reload browser → connected
+```
+
+If running on a remote server (e.g., Mac mini), SSH in first, then run the commands.
+If `openclaw` is not in PATH, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+**Alternative (localStorage copy)**:
+
+```javascript
+// Run in DevTools Console of approved browser
+JSON.stringify({
+  'openclaw-device-id': localStorage.getItem('openclaw-device-id'),
+  'openclaw-device-keys': localStorage.getItem('openclaw-device-keys')
+})
+// → Set same keys in new browser via localStorage.setItem
+```
+
+## Gateway Management (macOS)
+
+```bash
+# Status check
+openclaw gateway status
+
+# Start / Stop
+openclaw gateway start
+openclaw gateway stop
+
+# macOS: LaunchAgent (recommended - enables auto-start)
+PLIST=$(ls ~/Library/LaunchAgents/ | grep openclaw | head -1)
+launchctl load   ~/Library/LaunchAgents/$PLIST
+launchctl unload ~/Library/LaunchAgents/$PLIST
+
+# Config repair (removes invalid keys)
+openclaw doctor --fix
+```
+
+## Log Investigation
+
+```bash
+# Latest logs
+tail -n 100 /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log
+
+# Errors only
+grep -i 'error\|warn\|fail' /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log | tail -30
+
+# Real-time monitoring
+tail -f /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log
+```
+
+**Harmless error**: `Failed to discover Ollama models: TypeError: fetch failed` — appears when Ollama is not running; does not affect Gateway operation.
 
 ## Known CVEs (All Patched in v2026.1.29+)
 
@@ -255,6 +343,8 @@ openclaw security audit --deep
 | [SECURITY.md](SECURITY.md) | CVE details, kill chains, hardening config, ClawHub analysis |
 | [SETUP.md](SETUP.md) | Installation, server requirements, Docker, integrations |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common errors, diagnostics, recovery procedures |
+| [CONFIG.md](CONFIG.md) | Configuration file reference, Tailscale Serve, LaunchAgent |
+| [MACMINI-SETUP.md](MACMINI-SETUP.md) | Mac mini server setup, sleep management, remote access |
 
 ## External Resources
 
@@ -266,5 +356,5 @@ openclaw security audit --deep
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2026-02-11
+**Version**: 1.1.0
+**Last Updated**: 2026-02-18

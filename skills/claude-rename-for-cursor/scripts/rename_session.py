@@ -14,6 +14,7 @@ the JSONL file directly (NOT from sessions-index.json).
 import json
 import sys
 from pathlib import Path
+from typing import Optional
 
 
 def get_session_dir(project_path: str) -> Path:
@@ -25,7 +26,7 @@ def get_session_dir(project_path: str) -> Path:
     return Path.home() / ".claude" / "projects" / encoded
 
 
-def find_current_session(session_dir: Path) -> Path | None:
+def find_current_session(session_dir: Path) -> Optional[Path]:
     """Find the most recently modified .jsonl session file."""
     jsonl_files = list(session_dir.glob("*.jsonl"))
     if not jsonl_files:
