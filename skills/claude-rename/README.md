@@ -53,6 +53,72 @@ claude-rename/
     └── rename_session.py       # Session rename logic
 ```
 
+## Client Behavior: Session Name Resolution
+
+Each Claude Code client reads session names differently. Understanding these differences is critical for reliable renaming.
+
+### How Clients Resolve Session Names
+
+| Client | Name Source | Read Strategy |
+|--------|-----------|---------------|
+| Claude Code CLI | `sessions-index.json` `customTitle` field | Full JSON parse |
+| Cursor Extension | JSONL `custom-title` entry | Head/tail partial read (see below) |
+| Antigravity Extension | JSONL `custom-title` entry | Head/tail partial read (see below) |
+
+### Cursor / Antigravity Extension: 64KB Tail Window
+
+The VS Code extensions (Cursor, Antigravity) do **not** read the entire JSONL file when building the session list. For performance, they read only:
+
+- **Head**: First 64KB (65,536 bytes)
+- **Tail**: Last 64KB (65,536 bytes)
+
+Session name resolution follows this priority:
+
+```
+displayName = searchTail("customTitle") || searchTail("summary") || firstUserMessage(head)
+```
+
+The `customTitle` field is searched **only in the tail** (last 64KB). It is NOT searched in the head.
+
+### Known Issue: Title Drift
+
+When a session is renamed, a `custom-title` entry is appended to the end of the JSONL file. As conversation continues, new entries (user messages, assistant responses, system context) accumulate after it, pushing the `custom-title` entry beyond the 64KB tail window.
+
+**Impact**: After 2-3 conversation exchanges (each exchange can add 20-50KB due to system reminders, hook outputs, and tool results), the custom title becomes invisible to the extension. The session list falls back to displaying the first user message instead.
+
+**Why some sessions retain their names**: Sessions that are renamed near the end of their lifecycle (e.g., renamed as the final action) keep the `custom-title` within the tail window. Sessions with repeated rename calls throughout their lifetime also maintain visibility, as the most recent `custom-title` entry stays close to the end.
+
+### Mitigation Strategies
+
+1. **Stop hook** (recommended): Re-append the `custom-title` entry at the end of each assistant turn, keeping it always within the tail window
+2. **Periodic compaction**: Use `compact_session.py` to reduce file size, which keeps the title within the readable range
+3. **Rename at session end**: Call `/claude-rename` as one of the last actions in a session
+
+### Claude Code CLI Behavior
+
+The CLI reads `sessions-index.json` directly and performs a full JSON parse, so the 64KB limitation does not apply. The `update_sessions_index()` function in `rename_session.py` ensures CLI compatibility.
+
+### Extension Internal Details
+
+The extension code path (observed in Cursor extension v2.1.x):
+
+```javascript
+// Session list: reads head + tail buffers
+const BUFFER_SIZE = 65536; // 64KB
+const head = readBytes(file, 0, BUFFER_SIZE);
+const tail = readBytes(file, fileSize - BUFFER_SIZE, BUFFER_SIZE);
+
+// Name resolution: tail-only for customTitle
+displayName = extractField(tail, "customTitle")
+           || extractField(tail, "summary")
+           || extractFirstUserMessage(head);
+
+// Full session load (when opening a session): reads entire file
+// custom-title is always found in this path
+```
+
+Note: Variable names are illustrative. The actual extension uses minified identifiers.
+
 ## License
 
 Apache 2.0

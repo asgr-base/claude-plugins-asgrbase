@@ -7,8 +7,15 @@ Usage:
 Identifies the current session by finding the most recently modified .jsonl
 file in the project's session directory, then appends a custom-title entry.
 
-The Cursor extension reads {"type":"custom-title","customTitle":"..."} from
-the JSONL file directly (NOT from sessions-index.json).
+Updates both:
+1. JSONL file (custom-title entry) — read by Cursor extension's performRefresh()
+2. sessions-index.json (customTitle field) — read by CLI / Antigravity clients
+
+The Cursor extension's performRefresh() has a vulnerability where
+customTitles.delete() runs before the try block that reads the JSONL.
+If reading a large file fails (e.g., memory pressure on 25MB+ files),
+the custom title is silently lost. Updating sessions-index.json provides
+a secondary record, and keeping JSONL files compact reduces the risk.
 """
 
 import json
@@ -60,8 +67,40 @@ def get_current_title(jsonl_path: Path) -> str:
     return title
 
 
-def rename_session(jsonl_path: Path, new_name: str) -> bool:
-    """Append a custom-title entry to the JSONL session file."""
+def update_sessions_index(session_dir: Path, session_id: str, new_name: str) -> bool:
+    """Update customTitle in sessions-index.json for CLI/Antigravity clients."""
+    index_path = session_dir / "sessions-index.json"
+    if not index_path.exists():
+        return False
+
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return False
+
+    entries = data.get("entries", [])
+    updated = False
+    for entry in entries:
+        if entry.get("sessionId") == session_id:
+            entry["customTitle"] = new_name
+            updated = True
+            break
+
+    if not updated:
+        return False
+
+    try:
+        with open(index_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+    except OSError:
+        return False
+
+    return True
+
+
+def rename_session(jsonl_path: Path, new_name: str, session_dir: Path) -> bool:
+    """Append a custom-title entry to the JSONL session file and update sessions-index.json."""
     old_title = get_current_title(jsonl_path)
 
     entry = {"type": "custom-title", "customTitle": new_name}
@@ -69,11 +108,19 @@ def rename_session(jsonl_path: Path, new_name: str) -> bool:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     session_id = jsonl_path.stem
+
+    # Also update sessions-index.json for CLI/Antigravity clients
+    index_updated = update_sessions_index(session_dir, session_id, new_name)
+
     if old_title:
         print(f'Renamed: "{old_title}" → "{new_name}"')
     else:
         print(f'Named: "{new_name}"')
     print(f"Session ID: {session_id}")
+    if index_updated:
+        print("sessions-index.json: updated")
+    else:
+        print("sessions-index.json: not updated (entry not found or file missing)")
     return True
 
 
@@ -100,7 +147,7 @@ def main():
         print("Error: No session files found", file=sys.stderr)
         sys.exit(1)
 
-    if rename_session(jsonl_path, new_name):
+    if rename_session(jsonl_path, new_name, session_dir):
         sys.exit(0)
     else:
         sys.exit(1)
