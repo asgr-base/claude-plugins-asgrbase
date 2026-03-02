@@ -67,36 +67,86 @@ def get_current_title(jsonl_path: Path) -> str:
     return title
 
 
-def update_sessions_index(session_dir: Path, session_id: str, new_name: str) -> bool:
-    """Update customTitle in sessions-index.json for CLI/Antigravity clients."""
+def _build_minimal_entry(session_dir: Path, session_id: str, new_name: str) -> dict:
+    """Build a minimal sessions-index entry from the JSONL file."""
+    jsonl_path = session_dir / f"{session_id}.jsonl"
+    entry = {
+        "sessionId": session_id,
+        "fullPath": str(jsonl_path),
+        "customTitle": new_name,
+    }
+
+    if jsonl_path.exists():
+        stat = jsonl_path.stat()
+        entry["fileMtime"] = int(stat.st_mtime * 1000)
+
+        # Extract firstPrompt from the first user message
+        try:
+            with open(jsonl_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                        if obj.get("type") == "user":
+                            msg = obj.get("message", {})
+                            content = msg.get("content", "")
+                            if isinstance(content, list):
+                                for c in content:
+                                    if isinstance(c, dict) and c.get("type") == "text":
+                                        entry["firstPrompt"] = c["text"][:200]
+                                        break
+                            elif isinstance(content, str):
+                                entry["firstPrompt"] = content[:200]
+                            break
+                    except (json.JSONDecodeError, KeyError):
+                        continue
+        except OSError:
+            pass
+
+    return entry
+
+
+def update_sessions_index(session_dir: Path, session_id: str, new_name: str) -> str:
+    """Update or create customTitle in sessions-index.json.
+
+    Returns: "updated", "created", or "failed"
+    """
     index_path = session_dir / "sessions-index.json"
+
     if not index_path.exists():
-        return False
+        # Create new sessions-index.json with this entry
+        data = {"version": 1, "entries": [_build_minimal_entry(session_dir, session_id, new_name)]}
+        try:
+            with open(index_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+            return "created"
+        except OSError:
+            return "failed"
 
     try:
         with open(index_path, "r", encoding="utf-8") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError):
-        return False
+        return "failed"
 
     entries = data.get("entries", [])
-    updated = False
     for entry in entries:
         if entry.get("sessionId") == session_id:
             entry["customTitle"] = new_name
-            updated = True
             break
-
-    if not updated:
-        return False
+    else:
+        # Entry not found — create a new one
+        entries.append(_build_minimal_entry(session_dir, session_id, new_name))
 
     try:
         with open(index_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False)
     except OSError:
-        return False
+        return "failed"
 
-    return True
+    return "updated" if any(e.get("sessionId") == session_id for e in entries) else "created"
 
 
 def rename_session(jsonl_path: Path, new_name: str, session_dir: Path) -> bool:
@@ -110,17 +160,14 @@ def rename_session(jsonl_path: Path, new_name: str, session_dir: Path) -> bool:
     session_id = jsonl_path.stem
 
     # Also update sessions-index.json for CLI/Antigravity clients
-    index_updated = update_sessions_index(session_dir, session_id, new_name)
+    index_result = update_sessions_index(session_dir, session_id, new_name)
 
     if old_title:
         print(f'Renamed: "{old_title}" → "{new_name}"')
     else:
         print(f'Named: "{new_name}"')
     print(f"Session ID: {session_id}")
-    if index_updated:
-        print("sessions-index.json: updated")
-    else:
-        print("sessions-index.json: not updated (entry not found or file missing)")
+    print(f"sessions-index.json: {index_result}")
     return True
 
 
