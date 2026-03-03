@@ -1,7 +1,7 @@
 ---
 name: claude-insight-reflect
 description: Claude Code Insightレポートを日本語翻訳し、示唆をCLAUDE.mdに反映。/insights、使用状況分析、改善提案関連の質問時に使用。
-version: 2.4.0
+version: 3.0.0
 ---
 
 # Claude Insight Reflect
@@ -69,7 +69,7 @@ CLAUDECODE= claude -p "/insights" 2>&1
 - プロジェクト配下 `.claude/usage-data/` に当日の `report-YYYYMMDD.html` があるか確認
 - なければ `~/.claude/usage-data/report.html` をコピー: `cp ~/.claude/usage-data/report.html .claude/usage-data/report-$(date +%Y%m%d).html`
 
-### Step 2: レポートの日本語翻訳（Bash/Python一括翻訳）
+### Step 2: レポートの日本語翻訳（2フェーズ高速翻訳）
 
 > **IMPORTANT: サブエージェントでの翻訳・Edit toolでの大量置換は禁止**
 >
@@ -77,41 +77,53 @@ CLAUDECODE= claude -p "/insights" 2>&1
 > - `run_in_background: true` サブエージェント → Write toolが自動拒否される
 > - 複数サブエージェント並列 → 同一ファイル競合エラー
 > - メインコンテキストでEdit tool大量呼び出し → ユーザー承認疲れ
->
-> **すべての翻訳をBash + Python heredocで実行すること。**
 
-**翻訳方式: 3段階方式（コピー → 翻訳マップ生成 → Bash/Python一括置換）**
+**翻訳方式: 2フェーズ方式（静的辞書 → 動的翻訳）**
 
-#### Stage 1: HTMLコピー
+v3.0で導入された高速翻訳フロー。レポートの翻訳対象を2種類に分離:
+
+| 種類 | 割合 | 方式 | 所要時間 |
+|------|------|------|----------|
+| **静的要素**（UI、見出し、ラベル、ボタン、JS文字列） | ~80% | `translate_static.py` | **<1秒** |
+| **動的コンテンツ**（ナラティブ、カード本文、プロジェクト説明） | ~20% | サブエージェント翻訳マップ→Python置換 | ~3-4分 |
+
+**合計: ~3-4分**（v2.4.0の~8.5分から**60%短縮**）
+
+#### Phase 1: 静的翻訳（translate_static.py）
 
 ```bash
+# HTMLコピー
 cp .claude/usage-data/report-YYYYMMDD.html .claude/usage-data/report-YYYYMMDD-ja.html
+
+# 静的要素を一括翻訳（<1秒）
+SKILL_DIR="$(dirname "$(readlink -f .claude/skills/claude-insight-reflect/SKILL.md)")"
+python3 "$SKILL_DIR/translate_static.py" .claude/usage-data/report-YYYYMMDD-ja.html
 ```
 
-#### Stage 2: 翻訳マップの生成（サブエージェント）
+- **107+件の固定翻訳**を即座に適用（ナビ、見出し、チャートラベル、ボタン、JS文字列、タイムゾーン等）
+- WARNINGが出た場合はレポート構造の変更を示唆 → `translate_static.py` の辞書更新が必要
+- スクリプト場所: 本スキルと同じディレクトリの `translate_static.py`
 
-**Task tool（`subagent_type: general-purpose`）でHTMLを読み込み、包括的な翻訳マップを作成**:
+#### Phase 2: 動的コンテンツ翻訳（サブエージェント + Python置換）
 
-- サブエージェントにHTMLファイル全文を読ませる（Read only、編集なし）
-- 以下のカテゴリ別に英語→日本語の対応表を生成させる:
-  - A. HTML属性（lang, title）
-  - B. ナビゲーション/TOCリンク
-  - C. セクション見出し（h1, h2, h3）
-  - D. 統計ラベル（Messages, Lines等）
-  - E. チャートタイトル・バーラベル（全チャート）
-  - F. ボタンラベル・JS文字列・タイムゾーン・ヘルパーテキスト
-  - G. ナラティブ段落（At a Glance, How You Use CC等）
-  - H. Feature Cards（タイトル、説明、おすすめ理由）
-  - I. Pattern Cards（タイトル、要約、詳細）
-  - J. Horizon Cards（タイトル、説明、始め方）
-  - K. Fun ending（見出し、本文）
-  - L. CLAUDE.md推奨項目（cmd-code, cmd-why の表示テキスト）
+**Agent tool（`subagent_type: general-purpose`）で動的部分のみの翻訳マップを生成**:
 
-このステップの出力は翻訳マップのみ（ファイル編集なし）。
+サブエージェントに以下を指示:
+1. Phase 1適用済みHTMLを読み込む（Read only）
+2. **動的セクションのみ**の英語→日本語翻訳マップを生成:
+   - At a Glance本文（glance-section内の段落）
+   - How You Use Claude Code ナラティブ（narrative段落）
+   - プロジェクトエリア名・説明（area-name, area-desc）
+   - Big Wins タイトル・説明（big-win-title, big-win-desc）
+   - Friction タイトル・説明・例（friction-title, friction-desc, friction-examples）
+   - Feature Cards 説明・理由（feature-why内の本文）
+   - Pattern Cards タイトル・要約・詳細（pattern-title, pattern-summary, pattern-detail）
+   - Horizon Cards タイトル・説明・始め方（horizon-possible, horizon-tip内の本文）
+   - Fun ending（見出し、本文）
+   - CLAUDE.md推奨項目のcmd-why表示テキスト
+3. Python replacement tuples形式で出力（ファイル編集なし）
 
-#### Stage 3: Bash/Pythonスクリプトで一括置換
-
-翻訳マップをもとに、**Bash toolからPython heredocスクリプトを実行**:
+翻訳マップをもとに**1-2回のBash + Python heredocスクリプト**で一括置換:
 
 ```bash
 python3 << 'PYEOF'
@@ -120,8 +132,9 @@ with open(filepath, 'r', encoding='utf-8') as f:
     content = f.read()
 count = 0
 replacements = [
-    ('>English text<', '>日本語テキスト<'),
-    # ... 置換ペアのリスト ...
+    # サブエージェントが生成した動的翻訳ペア
+    ('English narrative text...', '日本語ナラティブ...'),
+    # ...
 ]
 for old, new in replacements:
     if old in content:
@@ -131,25 +144,9 @@ for old, new in replacements:
         print(f"  WARNING: not found: {old[:60]}...")
 with open(filepath, 'w', encoding='utf-8') as f:
     f.write(content)
-print(f"Replacements: {count}. File saved.")
+print(f"Dynamic replacements: {count}. File saved.")
 PYEOF
 ```
-
-**スクリプト分割の目安**（実績: 192件/9スクリプト）:
-
-| スクリプト | 対象カテゴリ | 置換数目安 |
-|-----------|------------|:--------:|
-| 1 | UI要素（A〜F: 属性・ナビ・見出し・統計・チャート・ボタン・JS） | 80-100 |
-| 2 | At a Glance（G） | 10-15 |
-| 3 | How You Use CC（G） | 7-10 |
-| 4 | プロジェクトエリア（G） + How You Use CC残り | 15-20 |
-| 5 | Big Wins + Friction（G） | 15-20 |
-| 6 | Feature Cards（H） | 8-12 |
-| 7 | Pattern Cards（I） | 8-10 |
-| 8 | Horizon Cards（J） | 8-12 |
-| 9 | Fun ending + CLAUDE.md推奨項目（K, L） | 12-16 |
-
-**各スクリプト実行後に置換数を確認**し、WARNINGが出た場合はテキストの正確な一致を検証して修正。
 
 **翻訳対象外（英語のまま保持）**:
 - CSS・JavaScriptのロジック
@@ -161,6 +158,13 @@ PYEOF
 - 時間範囲ラベル（2-10s, 10-30s等の数値ラベル）
 - 技術用語（Claude Code, MCP, CLAUDE.md, Docling, openpyxl, Feedly等）
 - URL・href属性
+
+#### translate_static.py の保守
+
+レポート構造が変更された場合（新セクション追加、ラベル変更等）:
+1. Phase 1実行時のWARNINGで検知
+2. `translate_static.py` の `STATIC_REPLACEMENTS` 辞書を更新
+3. 新しいバーラベルやセクション見出しを追加
 
 **出力**: `.claude/usage-data/report-YYYYMMDD-ja.html`
 
@@ -262,5 +266,5 @@ Claude Codeが示唆反映時に必ず確認するステップ:
 
 ---
 
-**Version**: 2.4.0
-**Last Updated**: 2026-02-20
+**Version**: 3.0.0
+**Last Updated**: 2026-03-03
