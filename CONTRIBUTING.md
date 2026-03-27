@@ -6,7 +6,7 @@ ASGR Agent Skillsへの貢献を歓迎します！
 
 1. このリポジトリをFork
 2. 新しいブランチを作成: `git checkout -b feature/new-skill`
-3. `.claude/skills/` ディレクトリに新しいスキルフォルダを作成
+3. `plugins/` ディレクトリに新しいスキルフォルダを作成
 4. 必要なファイルを追加:
    - `SKILL.md` (必須): スキル定義とYAMLフロントマター
    - `README.md` (推奨): 詳細なドキュメント

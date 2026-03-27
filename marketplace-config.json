@@ -11,9 +11,9 @@
     "url": "https://github.com/asgr-base/agent-skills.git"
   },
   "skills": {
-    "discover": ".claude/skills/*/SKILL.md",
-    "pattern": ".claude/skills/*",
-    "manifest": ".claude/skills/*/marketplace.json"
+    "discover": "plugins/*/SKILL.md",
+    "pattern": "plugins/*",
+    "manifest": "plugins/*/marketplace.json"
   },
   "categories": [
     {
