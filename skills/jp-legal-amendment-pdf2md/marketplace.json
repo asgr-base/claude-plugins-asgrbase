@@ -1,0 +1,21 @@
+{
+  "name": "jp-legal-amendment-pdf2md",
+  "version": "1.1.0",
+  "description": "Convert Japanese legal amendment PDFs (vertical text, before/after comparison tables) to Markdown with change marking.",
+  "description_ja": "日本の法令改正PDF（縦書き・新旧対照表形式）をMarkdownに変換。変更箇所を太字・下線でマーク。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["japan", "legal", "amendment", "pdf", "markdown", "vertical-text", "comparison-table"],
+  "categories": ["legal", "document", "japan"],
+  "skills": [{"name": "jp-legal-amendment-pdf2md", "path": ".", "description": "Japanese legal amendment PDF to Markdown converter"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux", "windows"]
+  }
+}

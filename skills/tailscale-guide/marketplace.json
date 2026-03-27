@@ -1,0 +1,21 @@
+{
+  "name": "tailscale-guide",
+  "version": "1.0.0",
+  "description": "Guide for Tailscale mesh VPN network management, SSH access, Tailscale Serve, and OpenClaw integration.",
+  "description_ja": "Tailscaleメッシュ型VPNネットワークの管理ガイド。デバイス確認・SSH接続・Tailscale Serve・OpenClaw連携を支援。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["tailscale", "vpn", "mesh", "networking", "ssh", "remote-access", "openclaw"],
+  "categories": ["infrastructure", "networking"],
+  "skills": [{"name": "tailscale-guide", "path": ".", "description": "Tailscale VPN network management guide"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux"]
+  }
+}

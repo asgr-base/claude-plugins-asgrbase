@@ -1,22 +1,23 @@
-# ASGR Agent Skills
+# ASGR Base Claude Code Plugins
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-Agent%20Skills-purple)](https://code.claude.com)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Plugins-purple)](https://code.claude.com)
 
-Claude Code および Agent Skills 標準に対応したスキルコレクションです。
+日本の法令・税務・会計・業務効率化に特化した Claude Code プラグインコレクションです。
+Agent Skills、hooks、commands、configurations を含む統合マーケットプレイスとして提供しています。
 
 ## クイックスタート
 
 ### Claude Code プラグインとしてインストール
 
 ```bash
-/plugin marketplace add asgr-base/agent-skills
+/plugin marketplace add asgr-base/claude-plugins-asgrbase
 ```
 
 ### 特定のスキルをインストール
 
 ```bash
-/plugin install jp-law-verification@asgr-agent-skills
+/plugin install jp-law-verification@claude-plugins-asgrbase
 ```
 
 ### 手動インストール

@@ -1,6 +1,11 @@
 ---
 name: m365-ai-bridge-manager
 description: Manage Microsoft Teams integration via M365 AI Bridge Chrome Extension and MCP tools. Read channel/DM messages, queue replies, download attachments, check connection status, and troubleshoot setup. Use when user mentions Teams messages, Teams reading, Teams reply, Teams attachments, teams_read_messages, teams_queue_reply, teams_download_file, M365 bridge, or wants to interact with Microsoft Teams from Claude Code.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-03-03
+updateDate: 2026-03-03
+license: Apache-2.0
 ---
 
 # M365 AI Bridge Manager

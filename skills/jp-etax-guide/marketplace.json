@@ -1,0 +1,21 @@
+{
+  "name": "jp-etax-guide",
+  "version": "1.0.0",
+  "description": "Guide for e-Tax (national tax electronic filing system) including income tax, corporate tax, and consumption tax filing.",
+  "description_ja": "e-Tax（国税電子申告・納税システム）の利用ガイド。確定申告、法人税、源泉所得税、消費税の電子申告手続きを案内。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["japan", "tax", "etax", "e-tax", "national-tax", "income-tax", "filing", "electronic"],
+  "categories": ["tax", "japan"],
+  "skills": [{"name": "jp-etax-guide", "path": ".", "description": "e-Tax national tax electronic filing guide"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux", "windows"]
+  }
+}

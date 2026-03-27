@@ -5,6 +5,7 @@ version: 3.20.0
 author: claude_code
 createDate: 2025-12-27
 updateDate: 2026-01-26
+license: Apache-2.0
 ---
 
 # PDF to Markdown Converter (Docling Edition)

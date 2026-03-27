@@ -1,6 +1,11 @@
 ---
 name: skill-scanner
 description: Scan Agent Skills (SKILL.md packages) for security threats: prompt injection, data exfiltration, malicious code, command injection. Use when reviewing third-party skills before installation, auditing existing skills, or integrating security checks into CI/CD.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-03-02
+updateDate: 2026-03-02
+license: Apache-2.0
 ---
 
 # skill-scanner

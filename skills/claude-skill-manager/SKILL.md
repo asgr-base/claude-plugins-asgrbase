@@ -1,6 +1,11 @@
 ---
 name: claude-skill-manager
 description: Create, test, improve, publish, and manage Claude Code Agent Skills. Use when creating new skills, modifying existing skills, running skill evaluations, optimizing descriptions, publishing to GitHub, or managing skill repositories. Also use when users mention skill creation, SKILL.md, skill testing, or skill publishing.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-03-02
+updateDate: 2026-03-02
+license: Apache-2.0
 ---
 
 # Claude Skill Manager

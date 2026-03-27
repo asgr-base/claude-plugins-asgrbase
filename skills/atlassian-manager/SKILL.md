@@ -1,6 +1,11 @@
 ---
 name: atlassian-manager
 description: Manage Atlassian Confluence and Jira via MCP tools. Resolve Confluence Tiny Links (/wiki/x/XXXXX) to page IDs, set up MCP server connections, search pages with CQL/JQL, edit pages with ADF format, and troubleshoot common issues. Use when working with Atlassian, Confluence, Jira, MCP setup, tiny links, short URLs, page ID resolution, ADF editing, or page updates.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-03-03
+updateDate: 2026-03-03
+license: Apache-2.0
 ---
 
 # Atlassian Manager

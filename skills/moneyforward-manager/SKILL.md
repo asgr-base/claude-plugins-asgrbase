@@ -1,6 +1,11 @@
 ---
 name: moneyforward-manager
 description: MoneyForward クラウドひとり法人プランの管理・操作スキル。会計・給与・年末調整・社会保険など各サービスの利用方法案内と、Chrome DevTools MCP 経由での仕訳自動化操作（仕訳追加・編集・確認）を提供。MFクラウド、マネフォ、マネーフォワード、仕訳入力、仕訳追加、仕訳修正、役員報酬、仕訳自動化、MoneyForward操作、クラウド会計関連の質問・操作時に使用。
+version: 1.0.0
+author: asgr-base
+createDate: 2026-03-03
+updateDate: 2026-03-03
+license: Apache-2.0
 ---
 
 # MoneyForward Manager

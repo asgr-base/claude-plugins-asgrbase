@@ -1,0 +1,21 @@
+{
+  "name": "jp-eltax-guide",
+  "version": "2.0.0",
+  "description": "Guide for eLTAX (local tax portal system) procedures including salary reports, corporate resident tax, and electronic payments.",
+  "description_ja": "eLTAX（地方税ポータルシステム）の利用ガイド。給与支払報告書、法人住民税、電子納付の手続きを案内。Windows/macOS両対応。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["japan", "tax", "eltax", "local-tax", "pcdesk", "salary-report", "corporate-tax"],
+  "categories": ["tax", "japan"],
+  "skills": [{"name": "jp-eltax-guide", "path": ".", "description": "eLTAX local tax portal system guide"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux", "windows"]
+  }
+}

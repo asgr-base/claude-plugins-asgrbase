@@ -1,0 +1,21 @@
+{
+  "name": "happy-mobile-client",
+  "version": "2.0.0",
+  "description": "Setup and troubleshooting guide for Happy - Claude Code mobile client (iOS/Android).",
+  "description_ja": "Happy - Claude Code Mobile Clientのセットアップ・稼働確認・トラブルシューティング。スマホからのClaude Code操作を支援。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["claude-code", "mobile", "ios", "android", "happy", "remote", "e2e-encryption"],
+  "categories": ["claude-code", "infrastructure"],
+  "skills": [{"name": "happy-mobile-client", "path": ".", "description": "Happy mobile client setup and troubleshooting"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux"]
+  }
+}

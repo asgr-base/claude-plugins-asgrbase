@@ -1,6 +1,11 @@
 ---
 name: feedly-intelligence-report
 description: Feedlyから記事を取得し、重複統合・関連度スコアリング・注目度ランキングを行いインテリジェンスレポートを生成。Feedly、RSS、ニュースレポート、記事まとめ関連の質問時に使用。
+version: 1.0.0
+author: asgr-base
+createDate: 2026-02-03
+updateDate: 2026-02-13
+license: Apache-2.0
 ---
 
 # Feedly Intelligence Report

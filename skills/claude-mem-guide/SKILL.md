@@ -1,6 +1,11 @@
 ---
 name: claude-mem-guide
 description: claude-mem plugin guide for persistent memory across Claude Code sessions. Setup, troubleshooting, search usage, worker management. Use when user mentions claude-mem, persistent memory, session memory, or memory search.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-02-05
+updateDate: 2026-02-12
+license: Apache-2.0
 ---
 
 # claude-mem ガイド

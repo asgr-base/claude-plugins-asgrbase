@@ -1,0 +1,21 @@
+{
+  "name": "claude-md-guide",
+  "version": "2.1.0",
+  "description": "Guide for creating and optimizing CLAUDE.md files for maximum Claude Code performance.",
+  "description_ja": "CLAUDE.mdファイルの作成・最適化ガイド。プロジェクト固有のコンテキスト設定と性能最大化のベストプラクティスを提供。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["claude-code", "claude-md", "configuration", "optimization", "best-practices"],
+  "categories": ["claude-code"],
+  "skills": [{"name": "claude-md-guide", "path": ".", "description": "CLAUDE.md creation and optimization guide"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux", "windows"]
+  }
+}

@@ -2,6 +2,10 @@
 name: claude-insight-reflect
 description: Claude Code Insightレポートを日本語翻訳し、示唆をCLAUDE.mdに反映。/insights、使用状況分析、改善提案関連の質問時に使用。
 version: 3.0.0
+author: asgr-base
+license: Apache-2.0
+createDate: 2026-02-05
+updateDate: 2026-03-03
 ---
 
 # Claude Insight Reflect

@@ -1,0 +1,21 @@
+{
+  "name": "feedly-intelligence-report",
+  "version": "1.0.0",
+  "description": "Generate intelligence reports from Feedly articles with deduplication, relevance scoring, and attention ranking.",
+  "description_ja": "Feedlyから記事を取得し、重複統合・関連度スコアリング・注目度ランキングを行いインテリジェンスレポートを生成。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["feedly", "rss", "intelligence", "news", "report", "deduplication", "scoring"],
+  "categories": ["productivity"],
+  "skills": [{"name": "feedly-intelligence-report", "path": ".", "description": "Feedly-based intelligence report generation"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux", "windows"]
+  }
+}

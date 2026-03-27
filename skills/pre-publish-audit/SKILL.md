@@ -1,6 +1,11 @@
 ---
 name: pre-publish-audit
 description: Audit codebases and projects before public release. Detect personal information, credentials, organization/product names, environment-specific paths, hardcoded configurations, and non-generic code patterns. Use when publishing repositories to GitHub, preparing OSS releases, reviewing code for public sharing, or checking that a project contains no private/internal references. Also use when user mentions 公開前チェック, セキュリティ監査, or OSS公開準備.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-03-02
+updateDate: 2026-03-02
+license: Apache-2.0
 ---
 
 # Pre-Publish Audit

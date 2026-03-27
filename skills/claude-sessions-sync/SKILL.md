@@ -1,6 +1,11 @@
 ---
 name: claude-sessions-sync
 description: Sync Claude Code sessions across all clients (CLI, Cursor, Antigravity). Ensures all JSONL session files have a custom-title entry readable by all clients. Use when sessions are missing from resume picker or session list.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-02-20
+updateDate: 2026-02-20
+license: Apache-2.0
 ---
 
 # Claude Sessions Sync

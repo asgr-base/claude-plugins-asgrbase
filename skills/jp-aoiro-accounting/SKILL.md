@@ -5,6 +5,7 @@ version: 1.1.0
 author: claude_code
 createDate: 2026-02-11
 updateDate: 2026-02-11
+license: Apache-2.0
 ---
 
 # jp-aoiro-accounting: 青色申告帳簿作成スキル

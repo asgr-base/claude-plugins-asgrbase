@@ -1,0 +1,86 @@
+{
+  "name": "ASGR Base Claude Code Plugins",
+  "description": "A comprehensive collection of Claude Code plugins including Agent Skills, hooks, commands, and configurations for Japanese business professionals.",
+  "description_ja": "日本の法令・税務・会計・業務効率化に特化したClaude Code プラグインコレクション。Agent Skills、hook、command、configsを含む統合マーケットプレイス。",
+  "version": "1.0.0",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "skills": {
+    "discover": "skills/*/SKILL.md",
+    "pattern": "skills/*",
+    "manifest": "skills/*/marketplace.json"
+  },
+  "categories": [
+    {
+      "id": "legal",
+      "label": "Legal",
+      "label_ja": "法令・法務",
+      "skills": ["jp-law-verification", "jp-legal-amendment-pdf2md"]
+    },
+    {
+      "id": "tax",
+      "label": "Tax",
+      "label_ja": "税務・申告",
+      "skills": ["jp-etax-guide", "jp-eltax-guide", "jp-aoiro-accounting", "yayoi-aoiro-guide"]
+    },
+    {
+      "id": "accounting",
+      "label": "Accounting & Finance",
+      "label_ja": "会計・財務",
+      "skills": ["jp-aoiro-accounting", "moneyforward-manager", "yayoi-aoiro-guide"]
+    },
+    {
+      "id": "finance",
+      "label": "Finance & Compliance",
+      "label_ja": "金融・コンプライアンス",
+      "skills": ["aml-cft-guide", "moneyforward-manager"]
+    },
+    {
+      "id": "claude-code",
+      "label": "Claude Code",
+      "label_ja": "Claude Code ツール",
+      "skills": [
+        "claude-code-guide",
+        "claude-md-guide",
+        "claude-mem-guide",
+        "claude-rename",
+        "claude-sessions-sync",
+        "claude-skill-manager",
+        "claude-insight-reflect",
+        "happy-mobile-client",
+        "skill-scanner"
+      ]
+    },
+    {
+      "id": "productivity",
+      "label": "Productivity",
+      "label_ja": "業務効率化",
+      "skills": ["feedly-intelligence-report", "atlassian-manager", "m365-ai-bridge-manager"]
+    },
+    {
+      "id": "security",
+      "label": "Security",
+      "label_ja": "セキュリティ",
+      "skills": ["skill-scanner", "pre-publish-audit", "openclaw-guide"]
+    },
+    {
+      "id": "infrastructure",
+      "label": "Infrastructure",
+      "label_ja": "インフラ・ネットワーク",
+      "skills": ["openclaw-guide", "tailscale-guide", "happy-mobile-client"]
+    },
+    {
+      "id": "document",
+      "label": "Document Processing",
+      "label_ja": "ドキュメント処理",
+      "skills": ["pdf2md-docling", "jp-legal-amendment-pdf2md"]
+    }
+  ],
+  "tags": ["japanese", "law", "tax", "accounting", "claude-code", "plugins", "productivity", "security"],
+  "installInstructions": "Run `/plugin marketplace add asgr-base/claude-plugins-asgrbase` in Claude Code"
+}

@@ -5,6 +5,7 @@ version: 2.1.0
 author: claude_code
 createDate: 2026-01-12
 updateDate: 2026-01-25
+license: Apache-2.0
 ---
 
 # CLAUDE.md 作成・最適化ガイド

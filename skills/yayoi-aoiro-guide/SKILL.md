@@ -5,6 +5,7 @@ version: 1.0.0
 author: claude_code
 createDate: 2026-01-20
 updateDate: 2026-01-20
+license: Apache-2.0
 ---
 
 # やよいの青色申告オンライン ガイド

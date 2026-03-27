@@ -1,6 +1,11 @@
 ---
 name: openclaw-guide
 description: Guide for OpenClaw self-hosted AI agent setup, security hardening, and operation. Covers installation, configuration, vulnerability mitigation (CVE-2026-25253/25157/24763), ClawHub skill safety, backup strategies, device pairing (1008 error), Mac mini server setup, and monitoring. Use when user asks about OpenClaw, Clawdbot, Moltbot setup, security, hardening, troubleshooting, 1008 pairing required error, or device approval.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-02-13
+updateDate: 2026-02-21
+license: Apache-2.0
 ---
 
 # OpenClaw Guide

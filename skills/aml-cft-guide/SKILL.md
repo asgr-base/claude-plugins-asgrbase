@@ -5,6 +5,7 @@ version: 1.0.0
 author: claude_code
 createDate: 2026-01-17
 updateDate: 2026-01-17
+license: Apache-2.0
 ---
 
 # AML/CFT専門知識・試験対策ガイド

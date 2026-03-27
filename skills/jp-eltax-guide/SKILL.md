@@ -5,6 +5,7 @@ version: 2.0.0
 author: claude_code
 createDate: 2026-01-11
 updateDate: 2026-01-11
+license: Apache-2.0
 ---
 
 # eLTAX（地方税ポータルシステム）ガイド

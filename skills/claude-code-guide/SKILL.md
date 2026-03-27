@@ -5,6 +5,7 @@ version: 1.1.0
 author: claude_code
 createDate: 2026-01-25
 updateDate: 2026-01-25
+license: Apache-2.0
 ---
 
 # Claude Code 完全ガイド

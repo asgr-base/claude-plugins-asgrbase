@@ -1,0 +1,21 @@
+{
+  "name": "pre-publish-audit",
+  "version": "1.0.0",
+  "description": "Audit codebases before public release to detect personal information, credentials, and environment-specific configurations.",
+  "description_ja": "公開前にコードベースを監査。個人情報・認証情報・環境固有パス・ハードコード設定を検出し、汎用性を検証。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": ["security", "audit", "pre-publish", "oss", "credentials", "personal-info", "public-release"],
+  "categories": ["security"],
+  "skills": [{"name": "pre-publish-audit", "path": ".", "description": "Pre-publication security and privacy audit"}],
+  "dependencies": {},
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "platforms": ["macos", "linux", "windows"]
+  }
+}

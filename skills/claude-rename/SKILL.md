@@ -1,6 +1,11 @@
 ---
 name: claude-rename
 description: Rename the current Claude Code session. Use when user types /claude-rename or wants to rename the current session. Works in environments where the built-in /rename command is unavailable.
+version: 1.0.0
+author: asgr-base
+createDate: 2026-02-21
+updateDate: 2026-02-21
+license: Apache-2.0
 ---
 
 # Claude Rename

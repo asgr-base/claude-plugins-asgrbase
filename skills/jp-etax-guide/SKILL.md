@@ -5,6 +5,7 @@ version: 1.0.0
 author: claude_code
 createDate: 2026-01-12
 updateDate: 2026-01-12
+license: Apache-2.0
 ---
 
 # e-Tax（国税電子申告・納税システム）ガイド

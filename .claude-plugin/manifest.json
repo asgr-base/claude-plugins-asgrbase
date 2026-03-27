@@ -1,16 +1,22 @@
 {
-  "name": "asgr-agent-skills",
-  "version": "1.0.0",
-  "description": "ASGR Base Agent Skills Collection - Japanese law, tax, and business workflow skills",
+  "name": "claude-plugins-asgrbase",
+  "version": "1.1.0",
+  "description": "ASGR Base Claude Code Plugin Collection - Agent Skills, hooks, commands, and configurations for Japanese law, tax, accounting, and business productivity.",
   "author": "asgr-base",
   "license": "Apache-2.0",
   "repository": "https://github.com/asgr-base/agent-skills",
   "skills": ["skills/*"],
+  "commands": ["commands/*"],
+  "hooks": ["hooks/*"],
+  "agents": ["agents/*"],
+  "configs": ["configs/*"],
   "tags": [
     "japanese",
     "law",
     "tax",
     "business",
-    "e-gov"
+    "e-gov",
+    "claude-code",
+    "plugins"
   ]
 }

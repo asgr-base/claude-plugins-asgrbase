@@ -5,6 +5,7 @@ version: 1.0.0
 author: claude_code
 createDate: 2026-02-18
 updateDate: 2026-02-18
+license: Apache-2.0
 ---
 
 # Tailscale Guide
