@@ -1,11 +1,14 @@
 {
-  "name": "claude-plugins-asgrbase",
+  "name": "asgr-base",
   "displayName": "ASGR Base Claude Code Plugins",
   "displayName_ja": "ASGR ベース Claude Code プラグイン",
   "version": "1.0.0",
   "description": "A comprehensive collection of Claude Code plugins including 24 Agent Skills for Japanese law, tax, accounting, business productivity, and infrastructure management.",
   "description_ja": "日本の法令、税務、会計、業務効率化、インフラストラクチャに特化した24個のAgent Skillsを含むClaude Code プラグインコレクション。",
-  "author": "asgr-base",
+  "owner": {
+    "type": "organization",
+    "name": "asgr-base"
+  },
   "license": "Apache-2.0",
   "homepage": "https://github.com/asgr-base/agent-skills",
   "repository": {
@@ -36,37 +39,105 @@
     "infrastructure",
     "document"
   ],
-  "plugins": {
-    "skills": [
-      "plugins/aml-cft-guide",
-      "plugins/atlassian-manager",
-      "plugins/claude-code-guide",
-      "plugins/claude-insight-reflect",
-      "plugins/claude-md-guide",
-      "plugins/claude-mem-guide",
-      "plugins/claude-rename",
-      "plugins/claude-sessions-sync",
-      "plugins/claude-skill-manager",
-      "plugins/feedly-intelligence-report",
-      "plugins/happy-mobile-client",
-      "plugins/jp-aoiro-accounting",
-      "plugins/jp-eltax-guide",
-      "plugins/jp-etax-guide",
-      "plugins/jp-law-verification",
-      "plugins/jp-legal-amendment-pdf2md",
-      "plugins/m365-ai-bridge-manager",
-      "plugins/moneyforward-manager",
-      "plugins/openclaw-guide",
-      "plugins/pdf2md-docling",
-      "plugins/pre-publish-audit",
-      "plugins/skill-scanner",
-      "plugins/tailscale-guide",
-      "plugins/yayoi-aoiro-guide"
-    ]
-  },
+  "plugins": [
+    {
+      "name": "aml-cft-guide",
+      "type": "skill"
+    },
+    {
+      "name": "atlassian-manager",
+      "type": "skill"
+    },
+    {
+      "name": "claude-code-guide",
+      "type": "skill"
+    },
+    {
+      "name": "claude-insight-reflect",
+      "type": "skill"
+    },
+    {
+      "name": "claude-md-guide",
+      "type": "skill"
+    },
+    {
+      "name": "claude-mem-guide",
+      "type": "skill"
+    },
+    {
+      "name": "claude-rename",
+      "type": "skill"
+    },
+    {
+      "name": "claude-sessions-sync",
+      "type": "skill"
+    },
+    {
+      "name": "claude-skill-manager",
+      "type": "skill"
+    },
+    {
+      "name": "feedly-intelligence-report",
+      "type": "skill"
+    },
+    {
+      "name": "happy-mobile-client",
+      "type": "skill"
+    },
+    {
+      "name": "jp-aoiro-accounting",
+      "type": "skill"
+    },
+    {
+      "name": "jp-eltax-guide",
+      "type": "skill"
+    },
+    {
+      "name": "jp-etax-guide",
+      "type": "skill"
+    },
+    {
+      "name": "jp-law-verification",
+      "type": "skill"
+    },
+    {
+      "name": "jp-legal-amendment-pdf2md",
+      "type": "skill"
+    },
+    {
+      "name": "m365-ai-bridge-manager",
+      "type": "skill"
+    },
+    {
+      "name": "moneyforward-manager",
+      "type": "skill"
+    },
+    {
+      "name": "openclaw-guide",
+      "type": "skill"
+    },
+    {
+      "name": "pdf2md-docling",
+      "type": "skill"
+    },
+    {
+      "name": "pre-publish-audit",
+      "type": "skill"
+    },
+    {
+      "name": "skill-scanner",
+      "type": "skill"
+    },
+    {
+      "name": "tailscale-guide",
+      "type": "skill"
+    },
+    {
+      "name": "yayoi-aoiro-guide",
+      "type": "skill"
+    }
+  ],
   "compatibility": {
     "claude-code": ">=1.0.0"
-  },
-  "funding": [],
-  "badges": []
+  }
 }
