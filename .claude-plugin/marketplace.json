@@ -1,143 +1,277 @@
 {
   "name": "asgr-base",
-  "displayName": "ASGR Base Claude Code Plugins",
-  "displayName_ja": "ASGR ベース Claude Code プラグイン",
-  "version": "1.0.0",
-  "description": "A comprehensive collection of Claude Code plugins including 24 Agent Skills for Japanese law, tax, accounting, business productivity, and infrastructure management.",
-  "description_ja": "日本の法令、税務、会計、業務効率化、インフラストラクチャに特化した24個のAgent Skillsを含むClaude Code プラグインコレクション。",
   "owner": {
-    "type": "organization",
     "name": "asgr-base"
   },
-  "license": "Apache-2.0",
-  "homepage": "https://github.com/asgr-base/agent-skills",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/asgr-base/agent-skills.git"
+  "metadata": {
+    "description": "A comprehensive collection of Claude Code plugins including 24 Agent Skills for Japanese law, tax, accounting, business productivity, and infrastructure management.",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
   },
-  "keywords": [
-    "japanese",
-    "law",
-    "tax",
-    "accounting",
-    "business",
-    "productivity",
-    "claude-code",
-    "agent-skills",
-    "plugins",
-    "infrastructure",
-    "document-processing"
-  ],
-  "categories": [
-    "legal",
-    "tax",
-    "accounting",
-    "finance",
-    "claude-code",
-    "productivity",
-    "security",
-    "infrastructure",
-    "document"
-  ],
   "plugins": [
     {
       "name": "aml-cft-guide",
-      "type": "skill"
+      "source": "./plugins/aml-cft-guide",
+      "description": "AML/CFT（マネーローンダリング・テロ資金供与対策）専門ガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "legal"
     },
     {
       "name": "atlassian-manager",
-      "type": "skill"
+      "source": "./plugins/atlassian-manager",
+      "description": "Atlassianツール（Jira, Confluence）管理・自動化ガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "productivity"
     },
     {
       "name": "claude-code-guide",
-      "type": "skill"
+      "source": "./plugins/claude-code-guide",
+      "description": "Claude Code完全ガイド - 機能・設定・ベストプラクティス",
+      "version": "3.6.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "claude-insight-reflect",
-      "type": "skill"
+      "source": "./plugins/claude-insight-reflect",
+      "description": "Claude Code Insightレポート反映ツール",
+      "version": "3.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "claude-md-guide",
-      "type": "skill"
+      "source": "./plugins/claude-md-guide",
+      "description": "CLAUDE.md作成・最適化ガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "claude-mem-guide",
-      "type": "skill"
+      "source": "./plugins/claude-mem-guide",
+      "description": "claude-memプラグイン - セッション間永続メモリガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "claude-rename",
-      "type": "skill"
+      "source": "./plugins/claude-rename",
+      "description": "Claude Codeセッションリネームツール",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "claude-sessions-sync",
-      "type": "skill"
+      "source": "./plugins/claude-sessions-sync",
+      "description": "Claude Codeセッション同期ツール",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "claude-skill-manager",
-      "type": "skill"
+      "source": "./plugins/claude-skill-manager",
+      "description": "Claude Code Agent Skills管理・テスト・公開ツール",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "feedly-intelligence-report",
-      "type": "skill"
+      "source": "./plugins/feedly-intelligence-report",
+      "description": "Feedlyインテリジェンスレポート生成",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "productivity"
     },
     {
       "name": "happy-mobile-client",
-      "type": "skill"
+      "source": "./plugins/happy-mobile-client",
+      "description": "Happy - Claude Code Mobile Clientセットアップ・トラブルシューティング",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
     },
     {
       "name": "jp-aoiro-accounting",
-      "type": "skill"
+      "source": "./plugins/jp-aoiro-accounting",
+      "description": "青色申告帳簿作成ツール - Markdown + Python",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "accounting"
     },
     {
       "name": "jp-eltax-guide",
-      "type": "skill"
+      "source": "./plugins/jp-eltax-guide",
+      "description": "eLTAX（地方税ポータル）利用ガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "tax"
     },
     {
       "name": "jp-etax-guide",
-      "type": "skill"
+      "source": "./plugins/jp-etax-guide",
+      "description": "e-Tax（国税電子申告）利用ガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "tax"
     },
     {
       "name": "jp-law-verification",
-      "type": "skill"
+      "source": "./plugins/jp-law-verification",
+      "description": "e-Gov法令API - 日本法令確認スキル",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "legal"
     },
     {
       "name": "jp-legal-amendment-pdf2md",
-      "type": "skill"
+      "source": "./plugins/jp-legal-amendment-pdf2md",
+      "description": "法令改正PDF→Markdown変換ツール",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "document"
     },
     {
       "name": "m365-ai-bridge-manager",
-      "type": "skill"
+      "source": "./plugins/m365-ai-bridge-manager",
+      "description": "Microsoft 365 AI Bridge管理ツール",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "productivity"
     },
     {
       "name": "moneyforward-manager",
-      "type": "skill"
+      "source": "./plugins/moneyforward-manager",
+      "description": "MoneyForward クラウドひとり法人プラン管理・仕訳自動化",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "accounting"
     },
     {
       "name": "openclaw-guide",
-      "type": "skill"
+      "source": "./plugins/openclaw-guide",
+      "description": "OpenClaw Gatewayガイド - インストール・設定・トラブルシューティング",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "infrastructure"
     },
     {
       "name": "pdf2md-docling",
-      "type": "skill"
+      "source": "./plugins/pdf2md-docling",
+      "description": "PDF→Markdown変換（Docling）",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "document"
     },
     {
       "name": "pre-publish-audit",
-      "type": "skill"
+      "source": "./plugins/pre-publish-audit",
+      "description": "公開前監査スキル - 個人情報・認証情報検出",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "security"
     },
     {
       "name": "skill-scanner",
-      "type": "skill"
+      "source": "./plugins/skill-scanner",
+      "description": "スキルセキュリティスキャナー - 脅威検出",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "security"
     },
     {
       "name": "tailscale-guide",
-      "type": "skill"
+      "source": "./plugins/tailscale-guide",
+      "description": "Tailscaleネットワーク管理・操作ガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "infrastructure"
     },
     {
       "name": "yayoi-aoiro-guide",
-      "type": "skill"
+      "source": "./plugins/yayoi-aoiro-guide",
+      "description": "やよいの青色申告オンライン ガイド",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "tax"
     }
-  ],
-  "compatibility": {
-    "claude-code": ">=1.0.0"
-  }
+  ]
 }
