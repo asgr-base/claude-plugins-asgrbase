@@ -39,3 +39,4 @@ Thumbs.db
 
 # Project-specific (user config should not be committed)
 # User config is stored in ~/.feedly/ outside this repository
+Repos/
