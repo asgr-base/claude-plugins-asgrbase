@@ -1,0 +1,72 @@
+{
+  "name": "claude-plugins-asgrbase",
+  "displayName": "ASGR Base Claude Code Plugins",
+  "displayName_ja": "ASGR ベース Claude Code プラグイン",
+  "version": "1.0.0",
+  "description": "A comprehensive collection of Claude Code plugins including 24 Agent Skills for Japanese law, tax, accounting, business productivity, and infrastructure management.",
+  "description_ja": "日本の法令、税務、会計、業務効率化、インフラストラクチャに特化した24個のAgent Skillsを含むClaude Code プラグインコレクション。",
+  "author": "asgr-base",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/asgr-base/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asgr-base/agent-skills.git"
+  },
+  "keywords": [
+    "japanese",
+    "law",
+    "tax",
+    "accounting",
+    "business",
+    "productivity",
+    "claude-code",
+    "agent-skills",
+    "plugins",
+    "infrastructure",
+    "document-processing"
+  ],
+  "categories": [
+    "legal",
+    "tax",
+    "accounting",
+    "finance",
+    "claude-code",
+    "productivity",
+    "security",
+    "infrastructure",
+    "document"
+  ],
+  "plugins": {
+    "skills": [
+      "plugins/aml-cft-guide",
+      "plugins/atlassian-manager",
+      "plugins/claude-code-guide",
+      "plugins/claude-insight-reflect",
+      "plugins/claude-md-guide",
+      "plugins/claude-mem-guide",
+      "plugins/claude-rename",
+      "plugins/claude-sessions-sync",
+      "plugins/claude-skill-manager",
+      "plugins/feedly-intelligence-report",
+      "plugins/happy-mobile-client",
+      "plugins/jp-aoiro-accounting",
+      "plugins/jp-eltax-guide",
+      "plugins/jp-etax-guide",
+      "plugins/jp-law-verification",
+      "plugins/jp-legal-amendment-pdf2md",
+      "plugins/m365-ai-bridge-manager",
+      "plugins/moneyforward-manager",
+      "plugins/openclaw-guide",
+      "plugins/pdf2md-docling",
+      "plugins/pre-publish-audit",
+      "plugins/skill-scanner",
+      "plugins/tailscale-guide",
+      "plugins/yayoi-aoiro-guide"
+    ]
+  },
+  "compatibility": {
+    "claude-code": ">=1.0.0"
+  },
+  "funding": [],
+  "badges": []
+}
