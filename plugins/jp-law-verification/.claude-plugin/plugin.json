@@ -1,0 +1,9 @@
+{
+  "name": "jp-law-verification",
+  "description": "Verify Japanese laws using e-Gov Law API. Search tax laws, labor laws, and corporate laws for accurate legal references.",
+  "version": "2.1.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

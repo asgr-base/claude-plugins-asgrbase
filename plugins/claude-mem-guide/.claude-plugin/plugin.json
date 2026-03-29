@@ -1,0 +1,9 @@
+{
+  "name": "claude-mem-guide",
+  "description": "Guide for claude-mem plugin providing persistent memory across Claude Code sessions.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

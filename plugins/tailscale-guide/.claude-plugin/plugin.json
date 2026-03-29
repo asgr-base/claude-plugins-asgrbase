@@ -1,0 +1,9 @@
+{
+  "name": "tailscale-guide",
+  "description": "Guide for Tailscale mesh VPN network management, SSH access, Tailscale Serve, and OpenClaw integration.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

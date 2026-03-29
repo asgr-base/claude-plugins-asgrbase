@@ -1,0 +1,9 @@
+{
+  "name": "openclaw-guide",
+  "description": "Guide for OpenClaw self-hosted AI agent setup, security hardening, vulnerability mitigation, and Mac mini server operation.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

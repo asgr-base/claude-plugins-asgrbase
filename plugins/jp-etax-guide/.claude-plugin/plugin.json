@@ -1,0 +1,9 @@
+{
+  "name": "jp-etax-guide",
+  "description": "Guide for e-Tax (national tax electronic filing system) including income tax, corporate tax, and consumption tax filing.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

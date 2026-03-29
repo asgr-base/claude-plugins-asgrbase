@@ -1,0 +1,9 @@
+{
+  "name": "feedly-intelligence-report",
+  "description": "Generate intelligence reports from Feedly articles with deduplication, relevance scoring, and attention ranking.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "jp-aoiro-accounting",
+  "description": "Blue tax return (Aoiro Shinkoku) bookkeeping tool for Japanese sole proprietors using Markdown and Python.",
+  "version": "1.1.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

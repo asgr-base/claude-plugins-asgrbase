@@ -1,0 +1,9 @@
+{
+  "name": "aml-cft-guide",
+  "description": "Provides AML/CFT expertise for anti-money laundering and counter-terrorism financing compliance.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

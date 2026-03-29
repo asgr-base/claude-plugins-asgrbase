@@ -1,0 +1,9 @@
+{
+  "name": "claude-insight-reflect",
+  "description": "Translate Claude Code Insight reports to Japanese and reflect suggestions into CLAUDE.md configuration.",
+  "version": "3.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

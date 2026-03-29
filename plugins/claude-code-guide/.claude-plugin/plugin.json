@@ -1,0 +1,9 @@
+{
+  "name": "claude-code-guide",
+  "description": "Comprehensive guide for Claude Code features, settings, and best practices including Skills, Hooks, Subagents, MCPs, and Plugins.",
+  "version": "1.1.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "jp-eltax-guide",
+  "description": "Guide for eLTAX (local tax portal system) procedures including salary reports, corporate resident tax, and electronic payments.",
+  "version": "2.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

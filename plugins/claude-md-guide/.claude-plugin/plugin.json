@@ -1,0 +1,9 @@
+{
+  "name": "claude-md-guide",
+  "description": "Guide for creating and optimizing CLAUDE.md files for maximum Claude Code performance.",
+  "version": "2.1.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

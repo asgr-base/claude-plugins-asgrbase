@@ -1,0 +1,9 @@
+{
+  "name": "skill-scanner",
+  "description": "Scan Agent Skills for security threats: prompt injection, data exfiltration, malicious code, and command injection.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

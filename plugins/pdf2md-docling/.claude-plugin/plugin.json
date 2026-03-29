@@ -1,0 +1,9 @@
+{
+  "name": "pdf2md-docling",
+  "description": "Convert PDF to Markdown using Docling with TableFormer for high-accuracy table extraction and image export.",
+  "version": "3.20.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

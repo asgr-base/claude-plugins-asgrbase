@@ -1,0 +1,9 @@
+{
+  "name": "m365-ai-bridge-manager",
+  "description": "Manage Microsoft Teams integration via M365 AI Bridge Chrome Extension and MCP tools.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}

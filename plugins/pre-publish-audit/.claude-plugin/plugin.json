@@ -1,0 +1,9 @@
+{
+  "name": "pre-publish-audit",
+  "description": "Audit codebases before public release to detect personal information, credentials, and environment-specific configurations.",
+  "version": "1.0.0",
+  "author": {
+    "name": "asgr-base"
+  },
+  "license": "Apache-2.0"
+}
