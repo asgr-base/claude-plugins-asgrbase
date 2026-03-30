@@ -462,7 +462,7 @@ class MFClient:
     def create_journal(self, data):
         """仕訳新規作成。
 
-        data 形式:
+        data 形式（ラップなし）:
           {
             "transaction_date": "2026-03-29",  # 必須
             "journal_type": "journal_entry",   # 必須: "journal_entry" or "adjusting_entry"
@@ -471,14 +471,23 @@ class MFClient:
                 "debitor": {
                   "account_id": "<勘定科目ID>",  # 必須
                   "value": 11000,               # 必須: 税込金額
-                  "tax_id": "<税区分ID>"         # 省略可
+                  "sub_account_id": "<補助科目ID>",  # 省略可
+                  "trade_partner_code": "<取引先コード>",  # 省略可
+                  "tax_id": "<税区分ID>",       # 省略可
+                  "invoice_kind": "INVOICE_KIND_NOT_TARGET"  # 省略可
                 },
-                "creditor": { ... }             # 同構造
+                "creditor": { ... },            # 同構造
+                "remark": "行の摘要"            # 省略可
               }
             ],
-            "memo": "摘要"                      # 省略可
+            "memo": "仕訳全体の摘要"            # 省略可
           }
+
+        注：本メソッドは内部で {"journal": {...}} でラップしてから API に送信します。
         """
+        # API が {"journal": {...}} ラップを要求するため、ラップがない場合は追加
+        if "journal" not in data:
+            data = {"journal": data}
         return self._api_request("POST", "/journals", data)
 
     def update_journal(self, journal_id, data):
@@ -486,9 +495,110 @@ class MFClient:
 
         ⚠️ 全置換のため、未指定フィールドは削除されます。
         必ず事前に get_journal() で既存データを取得し、全フィールドを含めて送信してください。
+
+        注：本メソッドは内部で {"journal": {...}} でラップしてから API に送信します。
         """
+        # API が {"journal": {...}} ラップを要求するため、ラップがない場合は追加
+        if "journal" not in data:
+            data = {"journal": data}
         encoded = self._encode_id(journal_id)
         return self._api_request("PUT", f"/journals/{encoded}", data)
+
+    def resolve_journal_names(self, data):
+        """名前ベース仕訳 JSON の科目名・補助科目名・取引先名を ID/コードに解決する。
+
+        入力フォーマット:
+          branches[].debitor/creditor に以下のキーが使用可能:
+            account_name       → account_id に変換
+            sub_account_name   → sub_account_id に変換（同名の補助科目が複数ある場合は account_id でフィルタ）
+            trade_partner_name → trade_partner_code に変換
+
+        変換できない名前があれば全エラーをまとめて stderr 出力後 sys.exit(1)。
+        """
+        errors = []
+
+        # マスター情報を取得
+        try:
+            accounts_resp = self.get_accounts() or {}
+            accounts = accounts_resp if isinstance(accounts_resp, list) else accounts_resp.get("accounts", [])
+
+            sub_accounts_resp = self.get_sub_accounts() or {}
+            sub_accounts = sub_accounts_resp if isinstance(sub_accounts_resp, list) else sub_accounts_resp.get("sub_accounts", [])
+
+            partners_resp = self.get_partners() or {}
+            partners = partners_resp if isinstance(partners_resp, list) else partners_resp.get("trade_partners", [])
+        except Exception as e:
+            print(f"Error: マスター情報の取得に失敗しました: {e}", file=sys.stderr)
+            sys.exit(1)
+
+        # 名前ベースの索引を構築
+        account_name_map = {acc["name"]: acc["id"] for acc in accounts}
+        sub_account_map = {(sub["account_id"], sub["name"]): sub["id"] for sub in sub_accounts}
+        partner_name_map = {p["name"]: p["code"] for p in partners if p.get("code")}
+
+        # journal wrapper があればアンラップ
+        journal_data = data.get("journal") if "journal" in data else data
+
+        # branches を処理
+        branches = journal_data.get("branches", [])
+        for branch in branches:
+            for side in ["debitor", "creditor"]:
+                side_data = branch.get(side, {})
+
+                # account_name → account_id
+                if "account_name" in side_data:
+                    account_name = side_data["account_name"]
+                    if account_name in account_name_map:
+                        side_data["account_id"] = account_name_map[account_name]
+                        del side_data["account_name"]
+                    else:
+                        errors.append(f"科目名 '{account_name}' が見つかりません")
+
+                # sub_account_name → sub_account_id
+                if "sub_account_name" in side_data:
+                    sub_account_name = side_data["sub_account_name"]
+                    account_id = side_data.get("account_id")
+
+                    # account_id がある場合はそれでフィルタ
+                    if account_id:
+                        key = (account_id, sub_account_name)
+                        if key in sub_account_map:
+                            side_data["sub_account_id"] = sub_account_map[key]
+                            del side_data["sub_account_name"]
+                        else:
+                            errors.append(f"科目 ID {account_id} の補助科目 '{sub_account_name}' が見つかりません")
+                    else:
+                        # account_id がない場合は全補助科目から検索（複数該当時はエラー）
+                        matches = [(k[1], v) for k, v in sub_account_map.items() if k[1] == sub_account_name]
+                        if len(matches) == 1:
+                            side_data["sub_account_id"] = matches[0][1]
+                            del side_data["sub_account_name"]
+                        elif len(matches) > 1:
+                            errors.append(f"補助科目 '{sub_account_name}' が複数見つかりました。account_name も指定して区別してください")
+                        else:
+                            errors.append(f"補助科目 '{sub_account_name}' が見つかりません")
+
+                # trade_partner_name → trade_partner_code
+                if "trade_partner_name" in side_data:
+                    trade_partner_name = side_data["trade_partner_name"]
+                    if trade_partner_name in partner_name_map:
+                        side_data["trade_partner_code"] = partner_name_map[trade_partner_name]
+                        del side_data["trade_partner_name"]
+                    else:
+                        errors.append(f"取引先名 '{trade_partner_name}' が見つかりません")
+
+        # エラーがあれば出力して終了
+        if errors:
+            print("Error: 名前解決に失敗しました:", file=sys.stderr)
+            for err in errors:
+                print(f"  - {err}", file=sys.stderr)
+            sys.exit(1)
+
+        # journal wrapper を復元
+        if "journal" in data:
+            return {"journal": journal_data}
+        else:
+            return journal_data
 
     def delete_journal(self, journal_id):
         """仕訳削除。"""
@@ -761,6 +871,38 @@ def print_table(data, keys):
 
 
 # -------------------------
+# ユーティリティ関数
+# -------------------------
+
+def load_data_arg(data_str):
+    """--data 引数の @ファイル展開処理。
+
+    '@' で始まる場合はファイルを json.load() で読み込む。
+    それ以外は文字列として json.loads() でパース。
+    """
+    if data_str.startswith("@"):
+        file_path = data_str[1:]
+        if not os.path.exists(file_path):
+            print(f"Error: ファイルが見つかりません: {file_path}", file=sys.stderr)
+            sys.exit(1)
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"Error: JSON パース失敗 ({file_path}): {e}", file=sys.stderr)
+            sys.exit(1)
+        except IOError as e:
+            print(f"Error: ファイル読み込み失敗: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        try:
+            return json.loads(data_str)
+        except json.JSONDecodeError as e:
+            print(f"Error: JSON パース失敗: {e}", file=sys.stderr)
+            sys.exit(1)
+
+
+# -------------------------
 # CLI エントリーポイント
 # -------------------------
 
@@ -799,11 +941,13 @@ def main():
     get_j.add_argument("id", help="仕訳ID")
     get_j.add_argument("--json", action="store_true", help="JSON形式で出力")
     create_j = journal_s.add_parser("create", help="仕訳作成")
-    create_j.add_argument("--data", help="JSON データ（文字列）")
+    create_j.add_argument("--data", help="JSON データ（文字列または @ファイルパス）")
+    create_j.add_argument("--resolve-names", action="store_true", help="科目名・補助科目名・取引先名を ID/コードに解決する")
     create_j.add_argument("--json", action="store_true", help="JSON形式で出力")
     update_j = journal_s.add_parser("update", help="仕訳更新（全置換）")
     update_j.add_argument("id", help="仕訳ID")
-    update_j.add_argument("--data", help="JSON データ（文字列）")
+    update_j.add_argument("--data", help="JSON データ（文字列または @ファイルパス）")
+    update_j.add_argument("--resolve-names", action="store_true", help="科目名・補助科目名・取引先名を ID/コードに解決する")
     update_j.add_argument("--json", action="store_true", help="JSON形式で出力")
     delete_j = journal_s.add_parser("delete", help="仕訳削除")
     delete_j.add_argument("id", help="仕訳ID")
@@ -856,6 +1000,13 @@ def main():
         master_s.add_parser("connected-accounts", help="連携サービス"),
     ]:
         master_cmd.add_argument("--json", action="store_true", help="JSON形式で出力")
+
+    # master resolve - 名前から ID/コードを検索
+    resolve_p = master_s.add_parser("resolve", help="マスター情報を名前で検索（ID/コードを返す）")
+    resolve_p.add_argument("--account-name", help="科目名から ID を検索")
+    resolve_p.add_argument("--sub-account-name", help="補助科目名から ID を検索")
+    resolve_p.add_argument("--partner-name", help="取引先名からコードを検索")
+    resolve_p.add_argument("--json", action="store_true", help="JSON形式で出力")
 
     # グローバルオプション（master コマンドのみ - 他はsubcommandで個別追加）
     for p in [parser, master_p]:
@@ -921,7 +1072,9 @@ def main():
             if not args.data:
                 print("Error: --data に JSON データを指定してください", file=sys.stderr)
                 sys.exit(1)
-            data = json.loads(args.data)
+            data = load_data_arg(args.data)
+            if getattr(args, "resolve_names", False):
+                data = client.resolve_journal_names(data)
             result = client.create_journal(data)
             if result:
                 print_json(result)
@@ -929,7 +1082,9 @@ def main():
             if not args.data:
                 print("Error: --data に JSON データを指定してください", file=sys.stderr)
                 sys.exit(1)
-            data = json.loads(args.data)
+            data = load_data_arg(args.data)
+            if getattr(args, "resolve_names", False):
+                data = client.resolve_journal_names(data)
             result = client.update_journal(args.id, data)
             if result:
                 print_json(result)
@@ -1027,15 +1182,63 @@ def main():
         elif args.master_cmd == "connected-accounts":
             result = client.get_connected_accounts()
             keys = ["id", "name"]
+        elif args.master_cmd == "resolve":
+            # 名前から ID/コードを検索
+            if args.account_name:
+                resp = client.get_accounts() or {}
+                accounts = resp if isinstance(resp, list) else resp.get("accounts", [])
+                matches = [acc for acc in accounts if acc.get("name") == args.account_name]
+                if matches:
+                    result = {"name": args.account_name, "id": matches[0]["id"]}
+                else:
+                    print(f"Error: 科目名 '{args.account_name}' が見つかりません", file=sys.stderr)
+                    sys.exit(1)
+            elif args.sub_account_name:
+                resp = client.get_sub_accounts() or {}
+                sub_accounts = resp if isinstance(resp, list) else resp.get("sub_accounts", [])
+                matches = [sub for sub in sub_accounts if sub.get("name") == args.sub_account_name]
+                if len(matches) == 1:
+                    result = {
+                        "name": args.sub_account_name,
+                        "id": matches[0]["id"],
+                        "account_id": matches[0].get("account_id")
+                    }
+                elif len(matches) > 1:
+                    print(f"Error: 補助科目名 '{args.sub_account_name}' が複数見つかりました（{len(matches)}件）。"
+                          "account_id でフィルタしてください", file=sys.stderr)
+                    sys.exit(1)
+                else:
+                    print(f"Error: 補助科目名 '{args.sub_account_name}' が見つかりません", file=sys.stderr)
+                    sys.exit(1)
+            elif args.partner_name:
+                resp = client.get_partners() or {}
+                partners = resp if isinstance(resp, list) else resp.get("trade_partners", [])
+                matches = [p for p in partners if p.get("name") == args.partner_name]
+                if matches:
+                    result = {"name": args.partner_name, "code": matches[0].get("code")}
+                    if not result["code"]:
+                        print(f"Error: 取引先 '{args.partner_name}' にコードが設定されていません", file=sys.stderr)
+                        sys.exit(1)
+                else:
+                    print(f"Error: 取引先名 '{args.partner_name}' が見つかりません", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                print("Error: --account-name、--sub-account-name、--partner-name のいずれかを指定してください", file=sys.stderr)
+                resolve_p.print_help()
+                sys.exit(1)
         else:
             master_p.print_help()
             return
 
         if result is not None:
-            items = result if isinstance(result, list) else result.get("data", result.get("items", [result]))
             if args.json:
                 print_json(result)
+            elif args.master_cmd == "resolve":
+                # resolve コマンドの結果は表形式ではなく、キーバリューで表示
+                for key, value in result.items():
+                    print(f"{key}: {value}")
             else:
+                items = result if isinstance(result, list) else result.get("data", result.get("items", [result]))
                 print_table(items if isinstance(items, list) else [], keys)
 
     else:
