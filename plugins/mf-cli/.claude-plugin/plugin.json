@@ -19,11 +19,7 @@
     "仕訳",
     "会計"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/asgr-base/claude-plugins-asgrbase.git",
-    "directory": "plugins/mf-cli"
-  },
+  "repository": "https://github.com/asgr-base/claude-plugins-asgrbase/tree/main/plugins/mf-cli",
   "homepage": "https://developers.api-accounting.moneyforward.com/",
   "bugs": {
     "url": "https://github.com/asgr-base/claude-plugins-asgrbase/issues"
