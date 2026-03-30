@@ -1,9 +1,0 @@
-{
-  "name": "moneyforward-manager",
-  "description": "MoneyForward Cloud management for solo corporation plan with journal entry automation via Chrome DevTools MCP.",
-  "version": "1.0.0",
-  "author": {
-    "name": "asgr-base"
-  },
-  "license": "Apache-2.0"
-}

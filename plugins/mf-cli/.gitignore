@@ -1,0 +1,9 @@
+# Development documentation (not for public release)
+CLAUDE.md
+_docs/
+
+# Cache & temporary files
+__pycache__/
+*.pyc
+.cache/
+*.egg-info/
