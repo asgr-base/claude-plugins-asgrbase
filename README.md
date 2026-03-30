@@ -41,6 +41,7 @@ cp -r agent-skills/plugins/jp-law-verification ~/.claude/skills/
 | [jp-eltax-guide](plugins/jp-eltax-guide/) | eLTAX（地方税ポータル）の利用ガイド | 2.0.0 |
 | [jp-aoiro-accounting](plugins/jp-aoiro-accounting/) | 青色申告帳簿をMarkdown + Pythonで作成・管理 | 1.1.0 |
 | [jp-legal-amendment-pdf2md](plugins/jp-legal-amendment-pdf2md/) | 法令改正PDF（縦書き・新旧対照表）をMarkdownに変換 | 1.1.0 |
+| [mf-cli](plugins/mf-cli/) | MoneyForward Cloud Accounting をコマンドラインから操作 | 1.2.0 |
 | [mf-hitorihojin-guide](plugins/mf-hitorihojin-guide/) | マネーフォワード クラウド ひとり法人プランのガイド | 1.2.0 |
 | [yayoi-aoiro-guide](plugins/yayoi-aoiro-guide/) | やよいの青色申告オンラインの利用ガイド | 1.0.0 |
 | [aml-cft-guide](plugins/aml-cft-guide/) | AML/CFT（マネロン・テロ資金対策）の専門知識・試験対策 | 1.0.0 |
@@ -93,7 +94,7 @@ agent-skills/
 │       ├── jp-law-verification/
 │       ├── jp-legal-amendment-pdf2md/
 │       ├── m365-ai-bridge-manager/
-│       ├── moneyforward-manager/
+│       ├── mf-cli/
 │       ├── openclaw-guide/
 │       ├── pdf2md-docling/
 │       ├── pre-publish-audit/

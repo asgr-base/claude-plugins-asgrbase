@@ -197,14 +197,14 @@
       "category": "productivity"
     },
     {
-      "name": "moneyforward-manager",
-      "source": "./plugins/moneyforward-manager",
-      "description": "MoneyForward クラウドひとり法人プラン管理・仕訳自動化",
-      "version": "1.0.0",
+      "name": "mf-cli",
+      "source": "./plugins/mf-cli",
+      "description": "MoneyForward Cloud Accounting CLI - 仕訳・試算表・マスター情報管理",
+      "version": "1.2.0",
       "author": {
         "name": "asgr-base"
       },
-      "license": "Apache-2.0",
+      "license": "MIT",
       "category": "accounting"
     },
     {

@@ -32,13 +32,13 @@
       "id": "accounting",
       "label": "Accounting & Finance",
       "label_ja": "会計・財務",
-      "skills": ["jp-aoiro-accounting", "moneyforward-manager", "yayoi-aoiro-guide"]
+      "skills": ["jp-aoiro-accounting", "mf-cli", "yayoi-aoiro-guide"]
     },
     {
       "id": "finance",
       "label": "Finance & Compliance",
       "label_ja": "金融・コンプライアンス",
-      "skills": ["aml-cft-guide", "moneyforward-manager"]
+      "skills": ["aml-cft-guide"]
     },
     {
       "id": "claude-code",
