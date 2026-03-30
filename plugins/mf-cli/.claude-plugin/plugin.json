@@ -3,44 +3,7 @@
   "description": "MoneyForward Cloud Accounting CLI - Manage journals, reports, and master data via OAuth 2.0 secure API operations",
   "version": "1.2.0",
   "author": {
-    "name": "asgr-base",
-    "email": "support@asgr-base.com"
+    "name": "asgr-base"
   },
-  "license": "MIT",
-  "keywords": [
-    "moneyforward",
-    "accounting",
-    "cli",
-    "oauth2",
-    "api",
-    "journal",
-    "financial",
-    "報告",
-    "仕訳",
-    "会計"
-  ],
-  "repository": "https://github.com/asgr-base/claude-plugins-asgrbase/tree/main/plugins/mf-cli",
-  "homepage": "https://developers.api-accounting.moneyforward.com/",
-  "bugs": {
-    "url": "https://github.com/asgr-base/claude-plugins-asgrbase/issues"
-  },
-  "prerequisites": {
-    "python": ">=3.8",
-    "packages": [
-      "requests",
-      "oauth2",
-      "pyyaml"
-    ]
-  },
-  "features": [
-    "OAuth 2.0 authentication",
-    "Journal management (CRUD)",
-    "Financial reports (trial balance, transition)",
-    "Master data access (accounts, departments, taxes, partners)",
-    "Batch operations",
-    "CSV/JSON export",
-    "Multi-language support (ja/en)"
-  ],
-  "endpoints": 20,
-  "testCoverage": "100% (16/16 tests pass)"
+  "license": "MIT"
 }
