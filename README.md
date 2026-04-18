@@ -56,6 +56,7 @@ cp -r claude-plugins-asgrbase/plugins/jp-law-verification ~/.claude/skills/
 | [claude-insight-reflect](plugins/claude-insight-reflect/) | Insightレポート生成・翻訳・CLAUDE.md反映 | 3.0.0 |
 | [claude-rename](plugins/claude-rename/) | セッションリネーム | 1.0.0 |
 | [claude-sessions-sync](plugins/claude-sessions-sync/) | 全クライアント間のセッション一覧同期 | 1.0.0 |
+| [learn](plugins/learn/) | セッション振り返りと設定改善提案スキル | 1.0.0 |
 | [marketplace-plugin-manager](plugins/marketplace-plugin-manager/) | マーケットプレイス管理 - プラグイン追加・更新・整合性チェック | 1.2.4 |
 
 ### ドキュメント変換
@@ -93,6 +94,7 @@ claude-plugins-asgrbase/
 │       ├── jp-etax-guide/
 │       ├── jp-law-verification/
 │       ├── jp-legal-amendment-pdf2md/
+│       ├── learn/
 │       ├── m365-ai-bridge-manager/
 │       ├── marketplace-plugin-manager/
 │       ├── mf-cli/

@@ -186,6 +186,17 @@
       "category": "document"
     },
     {
+      "name": "learn",
+      "source": "./plugins/learn",
+      "description": "セッション振り返りと設定改善提案スキル",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
+    },
+    {
       "name": "m365-ai-bridge-manager",
       "source": "./plugins/m365-ai-bridge-manager",
       "description": "Microsoft 365 AI Bridge管理ツール",

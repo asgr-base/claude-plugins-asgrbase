@@ -1,0 +1,8 @@
+{
+  "name": "learn",
+  "version": "1.0.0",
+  "description": "セッション振り返りと設定改善提案スキル - CLAUDE.md・rules・references・スキル・hooks への改善を提案",
+  "author": { "name": "asgr-base" },
+  "license": "Apache-2.0",
+  "keywords": ["learn", "review", "improve", "claude-md", "session", "feedback"]
+}
