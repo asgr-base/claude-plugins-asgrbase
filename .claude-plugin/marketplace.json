@@ -263,6 +263,17 @@
       "category": "infrastructure"
     },
     {
+      "name": "marketplace-plugin-manager",
+      "source": "./plugins/marketplace-plugin-manager",
+      "description": "マーケットプレイス管理ツール - プラグイン追加・更新・整合性チェック",
+      "version": "1.2.4",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "claude-code"
+    },
+    {
       "name": "yayoi-aoiro-guide",
       "source": "./plugins/yayoi-aoiro-guide",
       "description": "やよいの青色申告オンライン ガイド",

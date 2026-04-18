@@ -4,7 +4,7 @@
   "description": "ASGR Base Claude Code Plugin Collection - Agent Skills, hooks, commands, and configurations for Japanese law, tax, accounting, and business productivity.",
   "author": "asgr-base",
   "license": "Apache-2.0",
-  "repository": "https://github.com/asgr-base/agent-skills",
+  "repository": "https://github.com/asgr-base/claude-plugins-asgrbase",
   "skills": ["plugins/*/SKILL.md"],
   "commands": ["plugins/*/COMMAND.md"],
   "hooks": ["plugins/*/HOOK.md"],

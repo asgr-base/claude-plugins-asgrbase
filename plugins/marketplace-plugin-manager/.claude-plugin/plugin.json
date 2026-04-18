@@ -1,0 +1,8 @@
+{
+  "name": "marketplace-plugin-manager",
+  "version": "1.2.4",
+  "description": "asgr-base マーケットプレイスのプラグイン追加・更新・整合性チェック。plugin.json / marketplace.json / README.md × 2 の4ファイル一括更新を保証。",
+  "author": { "name": "Liquid-dev" },
+  "license": "ELEMENTS, Inc.",
+  "keywords": ["plugin", "marketplace", "version-bump", "publish", "manage"]
+}

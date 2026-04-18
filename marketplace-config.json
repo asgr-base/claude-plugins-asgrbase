@@ -53,7 +53,8 @@
         "claude-skill-manager",
         "claude-insight-reflect",
         "happy-mobile-client",
-        "skill-scanner"
+        "skill-scanner",
+        "marketplace-plugin-manager"
       ]
     },
     {
