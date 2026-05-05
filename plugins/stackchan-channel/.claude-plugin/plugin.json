@@ -1,7 +1,7 @@
 {
   "name": "stackchan-channel",
   "version": "0.1.0",
-  "description": "StackChan voice chatbot agent channel plugin — MCP server with HTTP bridge between Mac mini Claude Code Agent and stackchan-server (audio handler). Used as `--channels server:stackchan-channel`.",
+  "description": "StackChan voice chatbot channel plugin: MCP server with HTTP bridge between Mac mini Claude Code Agent and stackchan-server",
   "author": { "name": "asgr-base" },
   "license": "Apache-2.0",
   "keywords": ["stackchan", "channel", "mcp", "voice", "agent", "voicevox", "iot"]
