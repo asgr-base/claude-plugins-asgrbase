@@ -1,12 +1,11 @@
 ---
 name: stackchan-channel
-description: StackChan voice chatbot agent channel — bridges Mac mini Claude Code Agent and stackchan-server via local HTTP + MCP notifications/claude/channel. Use this when configuring StackChan to run Claude Code Agent as the voice response source. The plugin itself is an MCP server with HTTP bridge; not directly invoked by users.
+description: StackChan voice chatbot agent channel plugin documentation. The plugin itself is an MCP server (server.ts) used as a Claude Code channel via `--channels server:stackchan-channel`. This SKILL.md exists for marketplace auto-discovery of the plugin and is documentation-only.
 version: 0.1.0
 author: asgr-base
 createDate: 2026-05-05
 updateDate: 2026-05-05
 license: Apache-2.0
-disable-model-invocation: true
 ---
 
 # stackchan-channel
