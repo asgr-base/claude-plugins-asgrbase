@@ -294,6 +294,17 @@
       },
       "license": "Apache-2.0",
       "category": "tax"
+    },
+    {
+      "name": "stackchan-channel",
+      "source": "./plugins/stackchan-channel",
+      "description": "StackChan voice chatbot channel plugin: MCP server with HTTP bridge between Mac mini Claude Code Agent and stackchan-server",
+      "version": "0.1.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "Apache-2.0",
+      "category": "iot"
     }
   ]
 }
