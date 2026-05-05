@@ -1,6 +1,8 @@
 {
   "name": "stackchan-channel",
-  "description": "StackChan local channel for Claude Code — HTTP bridge between stackchan-server (audio handler) and Claude Code Agent on Mac mini. Receives user STT messages via HTTP and pushes them to agent session via MCP notifications/claude/channel. Agent responses come back through reply tool and are forwarded to stackchan-server for VOICEVOX TTS.",
   "version": "0.1.0",
-  "keywords": ["stackchan", "channel", "mcp", "voice", "agent"]
+  "description": "StackChan voice chatbot agent channel plugin — MCP server with HTTP bridge between Mac mini Claude Code Agent and stackchan-server (audio handler). Used as `--channels server:stackchan-channel`.",
+  "author": { "name": "asgr-base" },
+  "license": "Apache-2.0",
+  "keywords": ["stackchan", "channel", "mcp", "voice", "agent", "voicevox", "iot"]
 }
