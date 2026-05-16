@@ -189,7 +189,7 @@
       "name": "jp-kobunsho-xml-to-pdf",
       "source": "./plugins/jp-kobunsho-xml-to-pdf",
       "description": "e-Gov 電子申請の公文書 ZIP（XML + XSL）を 1 ページに収まる PDF に変換",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "asgr-base"
       },

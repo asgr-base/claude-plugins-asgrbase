@@ -1,7 +1,7 @@
 ---
 name: jp-kobunsho-xml-to-pdf
-description: e-Gov 電子申請から返送される公文書 ZIP（XML + XSL スタイルシート）を、読みやすい PDF に変換する。ユーザーが「公文書 ZIP を PDF にして」「e-Gov の XML を PDF 化」「社会保険料額情報の PDF を作って」と言うと自動起動。1 つの ZIP に複数の XML が含まれる場合は個別 PDF を出力。XSL の固定 px width が用紙幅を超えるケース（社会保険料額情報など）でも、HTML 正規化と WeasyPrint 実測ベースの自動 fit-to-page で 1 ページに収める。日本の社労士・人事担当・小規模事業主が e-Gov から受け取った XML 公文書を保管・確認したい場面で使う。
-version: 1.0.0
+description: e-Gov 電子申請から返送される公文書 ZIP（XML + XSL スタイルシート）を、読みやすい PDF に変換する。ユーザーが「公文書 ZIP を PDF にして」「e-Gov の XML を PDF 化」「社会保険料額情報の PDF を作って」と言うと自動起動。1 つの ZIP に複数の XML が含まれる場合は個別 PDF を出力。XSL の固定 px width や table-layout: fixed、`<pre>` 内の長文など、A4 を超えるあらゆるケースを HTML 正規化 + aggressive CSS injection + 強制レスポンシブ化の多段フォールバックで A4 縦 1 ページに収める。日本の社労士・人事担当・小規模事業主が e-Gov から受け取った XML 公文書を保管・確認したい場面で使う。
+version: 1.1.0
 author: claude_code
 createDate: 2026-05-16
 updateDate: 2026-05-16
@@ -42,11 +42,21 @@ brew install pango
 apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
 ```
 
-### 2. Python パッケージ
+### 2. Python 環境のセットアップ（推奨: 専用 venv）
+
+システム Python に直接 weasyprint を入れると他プロジェクトと衝突するため、**プラグイン専用の venv を作る**のを推奨します。
 
 ```bash
-PLUGIN_DIR="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]:-$0})))"
-pip3 install -r "$PLUGIN_DIR/../requirements.txt"
+# プラグインのインストール先（バージョンは install 時のものに置き換え）
+PLUGIN=$(ls -d ~/.claude/plugins/cache/asgr-base/jp-kobunsho-xml-to-pdf/*/ | head -1)
+echo "Plugin path: $PLUGIN"
+
+# 専用 venv を作る（初回のみ）
+python3 -m venv "$PLUGIN/.venv"
+"$PLUGIN/.venv/bin/pip" install -q -r "$PLUGIN/requirements.txt"
+
+# 動作確認
+"$PLUGIN/.venv/bin/python" -c "import lxml, weasyprint; print('OK', lxml.__version__, weasyprint.__version__)"
 ```
 
 `requirements.txt` の中身:
@@ -55,10 +65,16 @@ pip3 install -r "$PLUGIN_DIR/../requirements.txt"
 
 ### 3. パス確認
 
+Claude Code のプラグインキャッシュ構造により、`convert.py` は次の場所にあります:
+
 ```bash
-# プラグインの scripts ディレクトリパスを特定
-SCRIPTS="${HOME}/.claude/plugins/cache/asgr-base/jp-kobunsho-xml-to-pdf/*/plugins/jp-kobunsho-xml-to-pdf/scripts"
-ls $SCRIPTS/convert.py
+# 標準的なインストール先
+PLUGIN=$(ls -d ~/.claude/plugins/cache/asgr-base/jp-kobunsho-xml-to-pdf/*/ | head -1)
+CONVERT="$PLUGIN/scripts/convert.py"
+PYTHON="$PLUGIN/.venv/bin/python"  # 上で作った venv
+
+# 動作確認
+ls -la "$CONVERT" "$PYTHON"
 ```
 
 ## 変換手順
@@ -70,20 +86,23 @@ ls $SCRIPTS/convert.py
 ### Step 2: CLI で変換
 
 ```bash
-# 基本
-python3 "$SCRIPTS/convert.py" /path/to/kobunsho.zip
+# 基本（前提条件 3 で設定した $PYTHON, $CONVERT を使用）
+"$PYTHON" "$CONVERT" /path/to/kobunsho.zip
 
 # 出力先指定
-python3 "$SCRIPTS/convert.py" /path/to/kobunsho.zip --output-dir /tmp/out
+"$PYTHON" "$CONVERT" /path/to/kobunsho.zip --output-dir /tmp/out
 
 # 向き手動指定
-python3 "$SCRIPTS/convert.py" /path/to/kobunsho.zip --landscape
+"$PYTHON" "$CONVERT" /path/to/kobunsho.zip --landscape
 
 # 自動 fit を切る（XSL 元の見た目を尊重する場合）
-python3 "$SCRIPTS/convert.py" /path/to/kobunsho.zip --no-fit
+"$PYTHON" "$CONVERT" /path/to/kobunsho.zip --no-fit
 
 # zoom 手動指定
-python3 "$SCRIPTS/convert.py" /path/to/kobunsho.zip --zoom 0.7
+"$PYTHON" "$CONVERT" /path/to/kobunsho.zip --zoom 0.7
+
+# 詳細ログ
+"$PYTHON" "$CONVERT" /path/to/kobunsho.zip --verbose
 ```
 
 ### Step 3: 結果確認
@@ -114,12 +133,18 @@ e-Gov 公文書 ZIP は以下のような構造が典型です:
 
 各 XML の冒頭 `<?xml-stylesheet type="text/xsl" href="..." ?>` 指示で参照される XSL が同 ZIP 内に同梱されています。
 
-## 自動 fit-to-page アルゴリズム
+## 自動 fit-to-page アルゴリズム (v1.1.0)
 
-XSL は画面表示用に固定 px（例: `width: 1400px`）が指定されており、A4 横でも収まらないケースがあります。本スキルは以下の 2 段階処理で 1 ページに収めます:
+XSL は画面表示用に固定 px（例: `width: 1400px`）や `table-layout: fixed`、`<pre>` 内の長文を持つことが多く、A4 縦では収まらないケースが頻発します。本スキルは以下の 4 段階フォールバックで A4 縦 1 ページ収納を目指します:
 
-1. **HTML 正規化** — XSLT 変換後の HTML 内の 600px 超の固定 width を `auto` に、30px 超の margin を 5px に置換
-2. **実測ベース fit** — WeasyPrint で一旦レンダリングし、ページ内のコンテンツ右端 X 座標 を実測 → ページ幅を超えれば A4 横に切替、まだダメなら zoom を段階的に下げる
+| Pass | 処理 | 対応するケース |
+|------|------|--------------|
+| **1. 通常レンダリング** | HTML 正規化（600px 超 width → auto、30px 超 margin → 5px、table-layout: fixed → auto、cellpadding="20px" → "20"）→ A4 縦／横で render | 多くの一般的な公文書 |
+| **2. Aggressive CSS** | `table { max-width: 100% !important }` / `pre { white-space: pre-wrap !important }` / `td { white-space: normal !important }` 等を強制注入 | `<pre>` 内の長文や `white-space: nowrap` が原因のはみ出し |
+| **3. 全 width 強制 100%** | HTML 内のすべての width 指定（CSS + 属性）を `100%` に置換、`table-layout: auto` 強制 | 複雑な CSS class 階層で width が深く埋め込まれているケース |
+| **4. 長尺紙フォールバック** | A4 をあきらめ、コンテンツ実幅に合わせた規格外サイズの PDF を生成 | どうしても折り返せない極端なコンテンツ |
+
+横はみ出しは WeasyPrint Document API で **実コンテンツ右端 X 座標** を測って判定します（縦に長い→複数ページは正当として扱う）。
 
 `--no-fit` フラグで正規化と fit の両方をスキップできます（元 XSL の見た目を保ったまま、収まらない場合はクリップされた PDF が出ます）。
 

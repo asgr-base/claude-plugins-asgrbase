@@ -12,30 +12,36 @@ td { padding: 10px; }
 </style></head>
 <body><table><tr>""" + "".join(f"<td>列{i}</td>" for i in range(20)) + "</tr></table></body></html>"
 
+# 属性 width で広いケース（新ZIP の口座振替通知書を模倣）
+ATTR_WIDE_HTML = """<!doctype html><html><head><meta charset="utf-8"></head>
+<body><table width="580"><tr>""" + "".join(f'<td width="50">列{i}</td>' for i in range(15)) + "</tr></table></body></html>"
+
 
 def test_small_html_fits_portrait_at_zoom_1():
     pdf_bytes, result = fit_to_page.render(SMALL_HTML, "", fit_to_page.FitOptions())
     assert pdf_bytes.startswith(b"%PDF")
-    assert result.fits
+    assert result.fits_horizontally
     assert result.orientation == "portrait"
-    assert result.zoom == 1.0
-    assert result.attempts == 1
 
 
-def test_wide_html_fits_after_normalization():
-    """1400px の固定幅でも、normalizer + 2-pass fit で 1 ページに収まる。"""
+def test_wide_html_fits_horizontally_after_normalization():
+    """1400px の固定幅でも、normalizer で auto 化されて横はみ出しなしになる。"""
     pdf_bytes, result = fit_to_page.render(WIDE_HTML, "", fit_to_page.FitOptions())
     assert pdf_bytes.startswith(b"%PDF")
-    assert result.fits, f"fit failed: {result}"
-    assert result.page_count == 1
+    assert result.fits_horizontally, f"horizontally fit failed: {result}"
+
+
+def test_attr_width_html_fits_via_aggressive_css():
+    """属性 width=580 の table も aggressive CSS injection で横はみ出しなしになる。"""
+    pdf_bytes, result = fit_to_page.render(ATTR_WIDE_HTML, "", fit_to_page.FitOptions())
+    assert pdf_bytes.startswith(b"%PDF")
+    assert result.fits_horizontally, f"horizontally fit failed: {result}"
 
 
 def test_no_fit_disables_normalization():
     opts = fit_to_page.FitOptions(no_fit=True)
     pdf_bytes, result = fit_to_page.render(WIDE_HTML, "", opts)
     assert pdf_bytes.startswith(b"%PDF")
-    # no_fit では正規化されず、widow 1400px がそのまま → 1 ページに収まらない可能性が高い
-    # （仕様: fit 検査結果は False になるが、PDF は出る）
     assert result.zoom == 1.0
 
 

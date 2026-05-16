@@ -91,7 +91,8 @@ def convert_zip(
             outputs.append(out_path)
             _log(
                 f"OK {xml_path.name} -> {out_path.name}  "
-                f"({result.orientation}, zoom={result.zoom:.2f}, fits={result.fits})",
+                f"({result.orientation}, pages={result.page_count}, "
+                f"fits_horizontally={result.fits_horizontally}, attempts={result.attempts})",
                 verbose,
             )
         return outputs
