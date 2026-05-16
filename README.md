@@ -64,6 +64,7 @@ cp -r claude-plugins-asgrbase/plugins/jp-law-verification ~/.claude/skills/
 | スキル名 | 説明 | バージョン |
 |---------|------|-----------|
 | [pdf2md-docling](plugins/pdf2md-docling/) | Docling + TableFormerによるPDF→Markdown変換 | 3.20.0 |
+| [jp-kobunsho-xml-to-pdf](plugins/jp-kobunsho-xml-to-pdf/) | e-Gov 公文書 ZIP（XML+XSL）を 1 ページに収まる PDF に変換 | 1.0.0 |
 
 ### ユーティリティ
 

@@ -1,0 +1,17 @@
+# Test fixtures: 公文書 ZIP は個人情報を含むためコミット禁止
+tests/fixtures/local/
+tests/fixtures/*.zip
+tests/fixtures/*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Output
+out/
+*.pdf
+!tests/fixtures/expected/*.pdf

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="sample_kagami.xsl" ?><DOC>
+  <FRONT>
+    <TITLE>サンプル公文書</TITLE>
+    <SECRECY>親展</SECRECY>
+  </FRONT>
+  <BODY>
+    <CONTENT>これはテスト用のサンプル公文書です。実機 e-Gov の構造を模倣しています。</CONTENT>
+  </BODY>
+</DOC>

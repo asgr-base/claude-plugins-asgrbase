@@ -186,6 +186,17 @@
       "category": "document"
     },
     {
+      "name": "jp-kobunsho-xml-to-pdf",
+      "source": "./plugins/jp-kobunsho-xml-to-pdf",
+      "description": "e-Gov 電子申請の公文書 ZIP（XML + XSL）を 1 ページに収まる PDF に変換",
+      "version": "1.0.0",
+      "author": {
+        "name": "asgr-base"
+      },
+      "license": "MIT",
+      "category": "document"
+    },
+    {
       "name": "learn",
       "source": "./plugins/learn",
       "description": "セッション振り返りと設定改善提案スキル",
