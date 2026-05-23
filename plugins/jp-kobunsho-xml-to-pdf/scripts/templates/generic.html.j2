@@ -1,0 +1,47 @@
+{% extends "base.html.j2" %}
+{% block content %}
+{% for block in doc.blocks %}
+  {% if block.type == "oshirase" %}
+    <section data-block="oshirase" class="card">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "title" %}
+    <section data-block="title">
+      <h1 class="doc-title">{{ block.data.text }}</h1>
+    </section>
+  {% elif block.type == "detail" %}
+    <section data-block="detail" class="card">
+      {% if block.data.rows %}
+      <table class="grid-table">
+        {% for row in block.data.rows %}
+          <tr>
+            {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+    </section>
+  {% elif block.type == "recipient" %}
+    <section data-block="recipient" class="card">
+      {% for line in block.data.address %}<p>{{ line }}</p>{% endfor %}
+      {% for line in block.data.name %}<p class="name">{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "notice" %}
+    <section data-block="notice">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "appeal" %}
+    <section data-block="appeal">
+      {% for para in block.data.paragraphs %}<p>{{ para }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "footer" %}
+    <section data-block="footer">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "main" %}
+    <section data-block="main" class="card">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% endif %}
+{% endfor %}
+{% endblock %}

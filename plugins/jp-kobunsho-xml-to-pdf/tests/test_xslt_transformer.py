@@ -22,12 +22,13 @@ def test_transform_returns_html_string(tmp_path):
 
 
 def test_transform_raises_on_missing_xml(tmp_path):
-    with pytest.raises(FileNotFoundError):
+    # v2.0.0: 入力エラーは XSLTError でラップして統一的に扱う
+    with pytest.raises(xslt_transformer.XSLTError):
         xslt_transformer.transform(tmp_path / "missing.xml", FIXTURES / "sample_kagami.xsl")
 
 
 def test_transform_raises_on_missing_xsl(tmp_path):
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(xslt_transformer.XSLTError):
         xslt_transformer.transform(FIXTURES / "sample_document.xml", tmp_path / "missing.xsl")
 
 

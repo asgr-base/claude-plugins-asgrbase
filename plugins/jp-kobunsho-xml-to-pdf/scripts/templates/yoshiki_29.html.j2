@@ -1,0 +1,57 @@
+{% extends "base.html.j2" %}
+{% block content %}
+{% for block in doc.blocks %}
+  {% if block.type == "oshirase" %}
+    <section data-block="oshirase" class="card">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "title" %}
+    <section data-block="title">
+      <h1 class="doc-title">{{ block.data.text }}</h1>
+    </section>
+  {% elif block.type == "announce" %}
+    <section data-block="announce">
+      <p>{{ block.data.text }}</p>
+    </section>
+  {% elif block.type == "payment-current" or block.type == "payment-previous" %}
+    {% set p = block.data %}
+    <section data-block="{{ block.type }}" class="card payment-card">
+      {% if p.title %}<div class="payment-title">{{ p.title }}</div>{% endif %}
+      {% if p.header_pairs %}
+      <table class="grid-table kv-pairs">
+        {% for pair in p.header_pairs %}
+          <tr><th>{{ pair.label }}</th><td>{{ pair.value }}</td></tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+      <table class="grid-table payment-grid">
+        <tr>
+          {% for h in p.column_headers %}<th>{{ h }}</th>{% endfor %}
+        </tr>
+        <tr>
+          {% for h in p.subheaders %}<th class="sub">{{ h }}</th>{% endfor %}
+        </tr>
+        <tr>
+          {% for v in p.amounts %}<td class="amount">{{ v }}</td>{% endfor %}
+        </tr>
+      </table>
+      <div class="total-line">
+        <span class="total-label">{{ p.total_label }}</span>
+        <span class="total-value">{{ p.total_value }}</span>
+      </div>
+    </section>
+  {% elif block.type == "issuer" %}
+    <section data-block="issuer">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "recipient" %}
+    <section data-block="recipient" class="card">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "appeal" %}
+    <section data-block="appeal">
+      {% for para in block.data.paragraphs %}<p>{{ para }}</p>{% endfor %}
+    </section>
+  {% endif %}
+{% endfor %}
+{% endblock %}

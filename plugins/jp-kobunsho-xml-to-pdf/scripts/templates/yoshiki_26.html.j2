@@ -1,0 +1,33 @@
+{% extends "base.html.j2" %}
+{% block content %}
+{% for block in doc.blocks %}
+  {% if block.type == "recipient" %}
+    <section data-block="recipient" class="card">
+      {% for line in block.data.lines %}<p>{{ line }}</p>{% endfor %}
+    </section>
+  {% elif block.type == "oshirase" %}
+    <section data-block="oshirase" class="card">
+      <p>{{ block.data.text }}</p>
+    </section>
+  {% elif block.type == "title" %}
+    <section data-block="title">
+      <h1 class="doc-title">{{ block.data.text }}</h1>
+    </section>
+  {% elif block.type == "passbook" %}
+    <section data-block="passbook" class="card">
+      <div class="kv-list">
+        {% for row in block.data.rows %}
+          <div class="kv-row">
+            <div class="kv-label">{{ row.label }}</div>
+            <div class="kv-value">{{ row.value }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% elif block.type == "appeal" %}
+    <section data-block="appeal" class="card">
+      <p>{{ block.data.text }}</p>
+    </section>
+  {% endif %}
+{% endfor %}
+{% endblock %}
