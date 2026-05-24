@@ -1,0 +1,48 @@
+{% extends "base.md.j2" %}
+{% block content -%}
+{% for block in doc.blocks %}
+{%- if block.type == "title" %}
+# {{ block.data.text }}
+
+{% elif block.type == "oshirase" %}
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% elif block.type == "detail" %}
+## 明細
+
+{% if block.data.rows %}{{ block.data.rows | md_table }}
+
+{% endif %}
+{% elif block.type == "recipient" %}
+## 宛先
+
+{% for line in block.data.address %}{{ line }}
+
+{% endfor %}
+{% for line in block.data.name %}**{{ line }}**
+
+{% endfor %}
+{% elif block.type == "notice" %}
+{% for line in block.data.lines %}> {{ line }}
+
+{% endfor %}
+{% elif block.type == "appeal" %}
+## 不服申立て・注意事項
+
+{% for para in block.data.paragraphs %}{{ para }}
+
+{% endfor %}
+{% elif block.type == "footer" %}
+---
+
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% elif block.type == "main" %}
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% endif -%}
+{% endfor %}
+{%- endblock %}

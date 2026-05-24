@@ -1,15 +1,33 @@
 # jp-kobunsho-xml-to-pdf
 
-e-Gov 電子申請から返送される公文書 ZIP（XML + XSL）を、**真のレスポンシブレイアウト**で 1 ページに収まる読みやすい PDF に変換するスキル + CLI ツール。
+e-Gov 電子申請から返送される公文書 ZIP（XML + XSL）を、**真のレスポンシブレイアウト**で 1 ページに収まる読みやすい **PDF / Markdown** に変換するスキル + CLI ツール。
 
 ## 特徴
 
 - **オフライン処理**: 個人情報を含む公文書を第三者サーバーに送らず手元で完結
 - **真のレスポンシブパイプライン (v2.0.0)**: XSL の table 入れ子に依存せず、意味データを抽出して CSS Grid で再配置。罫線完全制御・1 ページ収納・全データ表示を保証
-- **複数 XML 対応**: 1 つの ZIP に複数の XML が含まれる場合、それぞれを個別 PDF 化
+- **PDF / Markdown 同時出力 (v2.1.0)**: 同じ意味データから `--format pdf/md/both` で選択可能。Markdown は YAML frontmatter 付きで Obsidian / 帳簿への貼り付けに便利
+- **複数 XML 対応**: 1 つの ZIP に複数の XML が含まれる場合、それぞれを個別ファイル化
 - **日本語フォント同梱**: IPAex Gothic / Mincho を同梱し、環境差で豆腐化しない
 - **CLI 単独動作**: Claude Code から呼ぶだけでなく、シェルから直接実行可能
 - **拡張可能**: 新様式は `extractors/yoshiki_NN.py` + テンプレ + CSS の 3 ファイル追加で対応
+
+## v2.1.0 の新機能
+
+- **`--format {pdf,md,both}` フラグ**: 同じ意味データから PDF / Markdown を選択 / 同時出力
+  - `pdf` (default): v2.0 と後方互換 (PDF のみ)
+  - `md`: Markdown のみ (.md 拡張子、PDF と同 stem)
+  - `both`: 同ディレクトリに `.pdf` と `.md` を対で出力
+- Markdown は YAML frontmatter (`form_id` / `paper` / `title`) 付き
+- 全 5 様式対応 (yoshiki_29 / yoshiki_04 / yoshiki_26 / kagami_only / generic)
+
+```bash
+# Markdown のみ
+"$PY" "$CONVERT" /path/to/kobunsho.zip --format md
+
+# PDF + Markdown 同時
+"$PY" "$CONVERT" /path/to/kobunsho.zip --format both
+```
 
 ## v2.0.0 の主な変更点 (v1.x からの移行)
 
@@ -74,10 +92,16 @@ PLUGIN=$(ls -d ~/.claude/plugins/cache/asgr-base/jp-kobunsho-xml-to-pdf/*/ | tai
 PY="$PLUGIN/.venv/bin/python"
 CONVERT="$PLUGIN/scripts/convert.py"
 
-# 基本
+# 基本 (PDF のみ)
 "$PY" "$CONVERT" /path/to/kobunsho.zip
 
-# 出力先指定 + 詳細ログ + 中間 HTML ダンプ
+# Markdown のみ (v2.1.0)
+"$PY" "$CONVERT" /path/to/kobunsho.zip --format md
+
+# PDF + Markdown 同時 (v2.1.0)
+"$PY" "$CONVERT" /path/to/kobunsho.zip --format both
+
+# 出力先指定 + 詳細ログ + 中間 HTML/MD ダンプ
 "$PY" "$CONVERT" /path/to/kobunsho.zip --output-dir /tmp/out --debug-dir /tmp/dbg -v
 ```
 
@@ -116,8 +140,9 @@ CONVERT="$PLUGIN/scripts/convert.py"
 | フラグ | 既定 | 説明 |
 |-------|-----|------|
 | `<zip_path>` | 必須 | 入力 ZIP |
-| `--output-dir DIR` | カレント | PDF 出力先 |
-| `--debug-dir DIR` | 無し | 中間 HTML / CSS / 注入 PDF のダンプ先 (デバッグ用) |
+| `--output-dir DIR` | カレント | 出力先 |
+| `--format {pdf,md,both}` | `pdf` | 出力形式 (v2.1.0) |
+| `--debug-dir DIR` | 無し | 中間 HTML / CSS / MD のダンプ先 (デバッグ用) |
 | `-v`, `--verbose` | False | 詳細ログを stderr に出力 |
 
 ## 競合認識

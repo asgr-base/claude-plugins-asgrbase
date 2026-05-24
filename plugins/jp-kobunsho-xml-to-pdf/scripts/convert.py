@@ -1,11 +1,13 @@
-"""convert.py — e-Gov 公文書 ZIP → PDF 変換 (v2.0.0)。
+"""convert.py — e-Gov 公文書 ZIP → PDF / Markdown 変換 (v2.1.0)。
 
-extractors/ (lxml で意味データ抽出) → templates/ (Jinja2 で HTML 生成)
+extractors/ (lxml で意味データ抽出) → templates/ (Jinja2 で HTML or Markdown 生成)
 → css/grid_v2.css (CSS Grid 配置) → WeasyPrint で PDF 化、というパイプライン。
 
 XSL の table 入れ子に依存せず、意味データを抽出して div ベースの HTML を再構築する。
 WeasyPrint の border-collapse バグ (Issue #2333 等) を構造的に回避し、
 真のレスポンシブレイアウトと均一な罫線品質を実現する。
+
+v2.1.0: 同じ Document データから Markdown 出力も生成可能 (--format md / both)。
 """
 from __future__ import annotations
 
@@ -20,7 +22,7 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from lib import zip_handler, xslt_transformer  # noqa: E402
 from lib.form_detector import detect_form, FormSpec  # noqa: E402
-from lib.render_v2 import render_v2  # noqa: E402
+from lib.render_v2 import render_v2, render_v2_markdown  # noqa: E402
 
 
 def _log(msg: str, verbose: bool) -> None:
@@ -34,7 +36,19 @@ def convert_zip(
     *,
     debug_dir: Path | None = None,
     verbose: bool = False,
+    output_format: str = "pdf",
 ) -> list[Path]:
+    """ZIP 内の XML を PDF / Markdown / 両方 に変換する。
+
+    Args:
+        output_format: "pdf" | "md" | "both"。default "pdf" は v2.0.x と後方互換。
+
+    Returns:
+        生成されたファイルのパスリスト (PDF + Markdown が混在しうる)。
+    """
+    if output_format not in ("pdf", "md", "both"):
+        raise ValueError(f"invalid output_format: {output_format!r}")
+
     output_dir.mkdir(parents=True, exist_ok=True)
     if debug_dir is not None:
         debug_dir.mkdir(parents=True, exist_ok=True)
@@ -73,37 +87,57 @@ def convert_zip(
             if debug_dir is not None:
                 (debug_dir / f"{xml_path.stem}.raw.html").write_text(html, encoding="utf-8")
 
-            try:
-                pdf_bytes = render_v2(
-                    xml_html=html,
-                    form_spec=spec,
-                    base_url=str(xml_path.parent),
-                    debug_dir=debug_dir,
-                )
-            except Exception as e:
-                _log(f"RENDER ERROR {xml_path.name}: {e}", verbose)
-                continue
+            if output_format in ("pdf", "both"):
+                try:
+                    pdf_bytes = render_v2(
+                        xml_html=html,
+                        form_spec=spec,
+                        base_url=str(xml_path.parent),
+                        debug_dir=debug_dir,
+                    )
+                except Exception as e:
+                    _log(f"PDF RENDER ERROR {xml_path.name}: {e}", verbose)
+                else:
+                    out_path = output_dir / (xml_path.stem + ".pdf")
+                    out_path.write_bytes(pdf_bytes)
+                    outputs.append(out_path)
+                    _log(f"OK [pdf] {xml_path.name} -> {out_path.name}", verbose)
 
-            out_path = output_dir / (xml_path.stem + ".pdf")
-            out_path.write_bytes(pdf_bytes)
-            outputs.append(out_path)
-            _log(f"OK {xml_path.name} -> {out_path.name}", verbose)
+            if output_format in ("md", "both"):
+                try:
+                    md_str = render_v2_markdown(
+                        xml_html=html,
+                        form_spec=spec,
+                        debug_dir=debug_dir,
+                    )
+                except Exception as e:
+                    _log(f"MD RENDER ERROR {xml_path.name}: {e}", verbose)
+                else:
+                    out_path = output_dir / (xml_path.stem + ".md")
+                    out_path.write_text(md_str, encoding="utf-8")
+                    outputs.append(out_path)
+                    _log(f"OK [md] {xml_path.name} -> {out_path.name}", verbose)
 
     return outputs
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="e-Gov 公文書 ZIP (XML+XSL) を 1 ページに収まる PDF に変換"
+        description="e-Gov 公文書 ZIP (XML+XSL) を 1 ページに収まる PDF / Markdown に変換"
     )
     parser.add_argument("zip_path", type=Path, help="入力 ZIP のパス")
     parser.add_argument(
         "--output-dir", type=Path, default=Path.cwd(),
-        help="PDF 出力先 (デフォルト: カレントディレクトリ)",
+        help="出力先 (デフォルト: カレントディレクトリ)",
     )
     parser.add_argument(
         "--debug-dir", type=Path, default=None,
-        help="中間 HTML/CSS をダンプするディレクトリ (デバッグ用)",
+        help="中間 HTML/CSS/MD をダンプするディレクトリ (デバッグ用)",
+    )
+    parser.add_argument(
+        "--format", dest="output_format",
+        choices=["pdf", "md", "both"], default="pdf",
+        help="出力形式 (default: pdf)。md は Markdown のみ、both は PDF と Markdown 両方を同名 stem で出力",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="詳細ログを stderr に出力")
     args = parser.parse_args(argv)
@@ -114,8 +148,9 @@ def main(argv: list[str] | None = None) -> int:
             output_dir=args.output_dir,
             debug_dir=args.debug_dir,
             verbose=args.verbose,
+            output_format=args.output_format,
         )
-    except (FileNotFoundError, RuntimeError) as e:
+    except (FileNotFoundError, RuntimeError, ValueError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
     for p in outputs:

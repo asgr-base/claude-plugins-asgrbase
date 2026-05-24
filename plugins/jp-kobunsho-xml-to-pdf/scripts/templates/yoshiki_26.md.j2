@@ -1,0 +1,28 @@
+{% extends "base.md.j2" %}
+{% block content -%}
+{% for block in doc.blocks %}
+{%- if block.type == "recipient" %}
+## 宛先
+
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% elif block.type == "title" %}
+# {{ block.data.text }}
+
+{% elif block.type == "oshirase" %}
+{{ block.data.text }}
+
+{% elif block.type == "passbook" %}
+## 通帳情報
+
+{{ block.data.rows | md_kv }}
+
+{% elif block.type == "appeal" %}
+## 不服申立て・注意事項
+
+{{ block.data.text }}
+
+{% endif -%}
+{% endfor %}
+{%- endblock %}

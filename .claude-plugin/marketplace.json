@@ -188,8 +188,8 @@
     {
       "name": "jp-kobunsho-xml-to-pdf",
       "source": "./plugins/jp-kobunsho-xml-to-pdf",
-      "description": "e-Gov 電子申請の公文書 ZIP（XML + XSL）を 1 ページに収まる PDF に変換。意味データ抽出 + CSS Grid 再配置の真のレスポンシブパイプライン",
-      "version": "2.0.0",
+      "description": "e-Gov 電子申請の公文書 ZIP（XML + XSL）を 1 ページに収まる PDF / Markdown に変換。意味データ抽出 + CSS Grid 再配置の真のレスポンシブパイプライン",
+      "version": "2.1.0",
       "author": {
         "name": "asgr-base"
       },

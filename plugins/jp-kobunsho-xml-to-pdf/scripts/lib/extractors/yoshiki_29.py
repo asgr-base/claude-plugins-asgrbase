@@ -116,8 +116,8 @@ class Yoshiki29Extractor(BaseExtractor):
         )]
         total_value = normalR[0] if normalR else ""
 
-        # ヘッダ部分 (本月分: 「事業所整理記号 03ｸﾇｱ 事業所番号 15924 / 納付目的年月 令和8年4月 ...」
-        # 前月分: 「令和8年3月分保険料 / 領収日 令和8年4月30日」)
+        # ヘッダ部分 (本月分: 「事業所整理記号 / 事業所番号 / 納付目的年月 / 納付期限」、
+        # 前月分: 「N 年 M 月分保険料 / 領収日」)
         bigC = [self.text(c) for c in target.xpath(
             ".//td[contains(concat(' ', normalize-space(@class), ' '), ' bigC ')]"
         )]

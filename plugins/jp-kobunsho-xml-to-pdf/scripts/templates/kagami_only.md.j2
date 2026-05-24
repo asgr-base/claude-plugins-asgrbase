@@ -1,0 +1,12 @@
+{% extends "base.md.j2" %}
+{% block content -%}
+# {{ doc.title }}
+
+{% for block in doc.blocks %}
+{%- if block.type == "header" %}
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% endif -%}
+{% endfor %}
+{%- endblock %}

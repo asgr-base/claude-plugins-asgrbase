@@ -94,9 +94,9 @@ class Yoshiki04Extractor(BaseExtractor):
 
         return {
             "headers_top": [self.text(c) for c in midashi_cells[:4]],   # 事業所整理記号 / 事業所番号 / 納付目的年月 / 納付期限
-            "values_top": [self.text(c) for c in bigC_cells[:4]],       # 03ｸﾇｱ / 15924 / 令和8年4月 / 令和8年6月1日
+            "values_top": [self.text(c) for c in bigC_cells[:4]],
             "headers_payment": [self.text(c) for c in midashi_cells[4:7]],  # 健康保険料 / 厚生年金保険料 / 子ども・子育て拠出金
-            "values_payment": [self.text(c) for c in bigR_cells[:3]],   # 6,826円 / 16,104円 / 316円
+            "values_payment": [self.text(c) for c in bigR_cells[:3]],
             "total_label": self.text(midashi_cells[7]) if len(midashi_cells) > 7 else "合計額",
             "total_value": self.text(bigR_cells[3]) if len(bigR_cells) > 3 else "",
         }

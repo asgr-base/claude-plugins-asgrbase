@@ -1,0 +1,9 @@
+{# Markdown 共通 base テンプレート。様式別 .md.j2 が extend する。 #}
+{# メタデータをコメントで残す: form_id / paper を YAML frontmatter にも入れる #}
+---
+form_id: {{ doc.form_id }}
+paper: {{ doc.paper }}
+title: {{ doc.title }}
+---
+
+{% block content %}{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.md.j2" %}
+{% block content -%}
+{% for block in doc.blocks %}
+{%- if block.type == "title" %}
+# {{ block.data.text }}
+
+{% elif block.type == "oshirase" %}
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% elif block.type == "announce" %}
+{{ block.data.text }}
+
+{% elif block.type == "payment-current" or block.type == "payment-previous" %}
+{%- set p = block.data %}
+## {{ p.title if p.title else ("本月分保険料" if block.type == "payment-current" else "前月分保険料") }}
+
+{% if p.header_pairs %}
+{{ p.header_pairs | md_kv }}
+
+{% endif %}
+{%- set headers = p.column_headers if p.column_headers else [] %}
+{%- if p.subheaders %}{% set headers = p.subheaders %}{% endif %}
+{% if headers and p.amounts %}{{ [p.amounts] | md_table(headers=headers) }}
+
+{% endif %}
+**{{ p.total_label }}**: {{ p.total_value }}
+
+{% elif block.type == "issuer" %}
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% elif block.type == "recipient" %}
+## 宛先
+
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% elif block.type == "appeal" %}
+## 不服申立て・注意事項
+
+{% for para in block.data.paragraphs %}{{ para }}
+
+{% endfor %}
+{% endif -%}
+{% endfor %}
+{%- endblock %}

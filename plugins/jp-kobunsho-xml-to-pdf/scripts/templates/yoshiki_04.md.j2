@@ -1,0 +1,44 @@
+{% extends "base.md.j2" %}
+{% block content -%}
+{% for block in doc.blocks %}
+{%- if block.type == "title" %}
+# {{ block.data.text }}
+
+{% elif block.type == "oshirase" %}
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% elif block.type == "payment" %}
+{%- set p = block.data %}
+## 保険料
+
+{% if p.headers_top and p.values_top %}{{ [p.values_top] | md_table(headers=p.headers_top) }}
+
+{% endif %}
+{% if p.headers_payment and p.values_payment %}{{ [p.values_payment] | md_table(headers=p.headers_payment) }}
+
+{% endif %}
+**{{ p.total_label }}**: {{ p.total_value }}
+
+{% elif block.type == "recipient" %}
+## 宛先
+
+{% for line in block.data.address %}{{ line }}
+
+{% endfor %}
+{% for line in block.data.name %}**{{ line }}**
+
+{% endfor %}
+{% elif block.type == "notice" %}
+{% for line in block.data.lines %}> {{ line }}
+
+{% endfor %}
+{% elif block.type == "footer" %}
+---
+
+{% for line in block.data.lines %}{{ line }}
+
+{% endfor %}
+{% endif -%}
+{% endfor %}
+{%- endblock %}
