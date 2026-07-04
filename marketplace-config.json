@@ -45,14 +45,7 @@
       "label": "Claude Code",
       "label_ja": "Claude Code ツール",
       "skills": [
-        "claude-code-guide",
-        "claude-md-guide",
-        "claude-mem-guide",
-        "claude-rename",
-        "claude-sessions-sync",
-        "claude-skill-manager",
         "claude-insight-reflect",
-        "happy-mobile-client",
         "skill-scanner",
         "marketplace-plugin-manager"
       ]
@@ -61,7 +54,7 @@
       "id": "productivity",
       "label": "Productivity",
       "label_ja": "業務効率化",
-      "skills": ["feedly-intelligence-report", "atlassian-manager", "m365-ai-bridge-manager"]
+      "skills": ["feedly-intelligence-report"]
     },
     {
       "id": "security",
@@ -73,7 +66,7 @@
       "id": "infrastructure",
       "label": "Infrastructure",
       "label_ja": "インフラ・ネットワーク",
-      "skills": ["openclaw-guide", "tailscale-guide", "happy-mobile-client"]
+      "skills": ["openclaw-guide", "tailscale-guide"]
     },
     {
       "id": "document",

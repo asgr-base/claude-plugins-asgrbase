@@ -21,87 +21,10 @@
       "category": "legal"
     },
     {
-      "name": "atlassian-manager",
-      "source": "./plugins/atlassian-manager",
-      "description": "Atlassianツール（Jira, Confluence）管理・自動化ガイド",
-      "version": "1.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "productivity"
-    },
-    {
-      "name": "claude-code-guide",
-      "source": "./plugins/claude-code-guide",
-      "description": "Claude Code完全ガイド - 機能・設定・ベストプラクティス",
-      "version": "3.6.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "claude-code"
-    },
-    {
       "name": "claude-insight-reflect",
       "source": "./plugins/claude-insight-reflect",
       "description": "Claude Code Insightレポート反映ツール",
       "version": "3.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "claude-code"
-    },
-    {
-      "name": "claude-md-guide",
-      "source": "./plugins/claude-md-guide",
-      "description": "CLAUDE.md作成・最適化ガイド",
-      "version": "1.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "claude-code"
-    },
-    {
-      "name": "claude-mem-guide",
-      "source": "./plugins/claude-mem-guide",
-      "description": "claude-memプラグイン - セッション間永続メモリガイド",
-      "version": "1.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "claude-code"
-    },
-    {
-      "name": "claude-rename",
-      "source": "./plugins/claude-rename",
-      "description": "Claude Codeセッションリネームツール",
-      "version": "1.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "claude-code"
-    },
-    {
-      "name": "claude-sessions-sync",
-      "source": "./plugins/claude-sessions-sync",
-      "description": "Claude Codeセッション同期ツール",
-      "version": "1.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "claude-code"
-    },
-    {
-      "name": "claude-skill-manager",
-      "source": "./plugins/claude-skill-manager",
-      "description": "Claude Code Agent Skills管理・テスト・公開ツール",
-      "version": "1.0.0",
       "author": {
         "name": "asgr-base"
       },
@@ -118,17 +41,6 @@
       },
       "license": "Apache-2.0",
       "category": "productivity"
-    },
-    {
-      "name": "happy-mobile-client",
-      "source": "./plugins/happy-mobile-client",
-      "description": "Happy - Claude Code Mobile Clientセットアップ・トラブルシューティング",
-      "version": "1.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "claude-code"
     },
     {
       "name": "jp-aoiro-accounting",
@@ -206,17 +118,6 @@
       },
       "license": "Apache-2.0",
       "category": "claude-code"
-    },
-    {
-      "name": "m365-ai-bridge-manager",
-      "source": "./plugins/m365-ai-bridge-manager",
-      "description": "Microsoft 365 AI Bridge管理ツール",
-      "version": "1.0.0",
-      "author": {
-        "name": "asgr-base"
-      },
-      "license": "Apache-2.0",
-      "category": "productivity"
     },
     {
       "name": "mf-cli",

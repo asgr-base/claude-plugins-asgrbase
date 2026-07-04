@@ -49,13 +49,7 @@ cp -r claude-plugins-asgrbase/plugins/jp-law-verification ~/.claude/skills/
 
 | スキル名 | 説明 | バージョン |
 |---------|------|-----------|
-| [claude-code-guide](plugins/claude-code-guide/) | Claude Codeの機能・設定・ベストプラクティス | 1.1.0 |
-| [claude-md-guide](plugins/claude-md-guide/) | CLAUDE.mdファイルの作成・最適化ガイド | 2.1.0 |
-| [claude-mem-guide](plugins/claude-mem-guide/) | claude-memプラグインのセットアップ・トラブルシューティング | 1.0.0 |
-| [claude-skill-manager](plugins/claude-skill-manager/) | Claude Code Agent Skills管理・テスト・公開ツール | 1.0.0 |
 | [claude-insight-reflect](plugins/claude-insight-reflect/) | Insightレポート生成・翻訳・CLAUDE.md反映 | 3.0.0 |
-| [claude-rename](plugins/claude-rename/) | セッションリネーム | 1.0.0 |
-| [claude-sessions-sync](plugins/claude-sessions-sync/) | 全クライアント間のセッション一覧同期 | 1.0.0 |
 | [learn](plugins/learn/) | セッション振り返りと設定改善提案スキル | 1.0.0 |
 | [marketplace-plugin-manager](plugins/marketplace-plugin-manager/) | マーケットプレイス管理 - プラグイン追加・更新・整合性チェック | 1.2.4 |
 
@@ -71,7 +65,6 @@ cp -r claude-plugins-asgrbase/plugins/jp-law-verification ~/.claude/skills/
 | スキル名 | 説明 | バージョン |
 |---------|------|-----------|
 | [feedly-intelligence-report](plugins/feedly-intelligence-report/) | Feedly記事のスコアリング・インテリジェンスレポート生成 | - |
-| [happy-mobile-client](plugins/happy-mobile-client/) | Happy（Claude Code Mobile Client）セットアップガイド | 2.0.0 |
 | [openclaw-guide](plugins/openclaw-guide/) | OpenClawセルフホストAIエージェントのセットアップ・セキュリティガイド | - |
 
 ## ディレクトリ構成
@@ -80,23 +73,14 @@ cp -r claude-plugins-asgrbase/plugins/jp-law-verification ~/.claude/skills/
 claude-plugins-asgrbase/
 ├── plugins/               # Agent Skills（Anthropic公式準拠）
 │       ├── aml-cft-guide/
-│       ├── atlassian-manager/
-│       ├── claude-code-guide/
 │       ├── claude-insight-reflect/
-│       ├── claude-md-guide/
-│       ├── claude-mem-guide/
-│       ├── claude-rename/
-│       ├── claude-sessions-sync/
-│       ├── claude-skill-manager/
 │       ├── feedly-intelligence-report/
-│       ├── happy-mobile-client/
 │       ├── jp-aoiro-accounting/
 │       ├── jp-eltax-guide/
 │       ├── jp-etax-guide/
 │       ├── jp-law-verification/
 │       ├── jp-legal-amendment-pdf2md/
 │       ├── learn/
-│       ├── m365-ai-bridge-manager/
 │       ├── marketplace-plugin-manager/
 │       ├── mf-cli/
 │       ├── openclaw-guide/
