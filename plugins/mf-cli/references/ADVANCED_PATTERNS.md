@@ -427,7 +427,6 @@ echo "✅ 差分同期完了"
 # デバッグモードで詳細ログ出力
 
 export MF_CLI_DEBUG=1
-export MF_CLI_VERBOSE=1
 
 python3 scripts/mf.py journal list --limit 5 --json 2>&1 | tee debug.log
 
@@ -464,14 +463,8 @@ echo "⏱️ パフォーマンス測定"
 echo "勘定科目取得:"
 time python3 scripts/mf.py master accounts --json > /dev/null
 
-# 仕訳一覧（キャッシュなし）
-echo "仕訳一覧（キャッシュなし）:"
-export MF_NO_CACHE=1
-time python3 scripts/mf.py journal list --limit 100 --json > /dev/null
-
-# 仕訳一覧（キャッシュ有）
-echo "仕訳一覧（キャッシュ有）:"
-unset MF_NO_CACHE
+# 仕訳一覧
+echo "仕訳一覧（100件）:"
 time python3 scripts/mf.py journal list --limit 100 --json > /dev/null
 
 # 試算表取得

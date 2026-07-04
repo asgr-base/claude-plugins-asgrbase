@@ -113,7 +113,7 @@ insufficient_permissions: This account does not have permission to access accoun
 | **すべてのAPI呼び出しが 403** | MoneyForward プラン | SKILL.md に「Plus プラン以上」と明記。プランアップグレード検討 |
 | 特定の操作（`journal delete` など）が 403 | OAuth スコープ | `mfc/accounting/journal.write` スコープが有効か App Portal で確認 |
 | 取引先・証憑作成が 403 | OAuth スコープ + 権限 | `mfc/accounting/trade_partners.write`, `mfc/accounting/voucher.write` を確認 |
-| 新しいトークンでも 403 | キャッシュ | `MF_NO_CACHE=1 python3 scripts/mf.py <コマンド>` で再試行 |
+| 新しいトークンでも 403 | トークン未反映 | `python3 scripts/mf.py auth refresh` でトークンを強制更新して再試行 |
 
 **詳細チェックリスト**:
 ```bash
@@ -126,8 +126,8 @@ python3 scripts/mf.py tenant info --json
 # 3. 特定エンドポイントテスト
 python3 scripts/mf.py journal list --limit 1 --json
 
-# 4. キャッシュ無効で再試行
-MF_NO_CACHE=1 python3 scripts/mf.py journal list --limit 1 --json
+# 4. デバッグ出力付きで再試行
+MF_CLI_DEBUG=1 python3 scripts/mf.py journal list --limit 1 --json
 ```
 
 ---
@@ -179,11 +179,9 @@ Retry-After: 60
 **解決方法**:
 
 **自動リトライ** (mf-cli は指数バックオフで自動処理):
-```python
-# 内部実装: 1秒 → 2秒 → 4秒で自動リトライ
-# 環境変数で最大リトライ回数を変更可能
-export MF_CLI_RETRY=5
-python3 scripts/mf.py journal list --limit 1000
+```
+内部実装: 1秒 → 2秒 → 4秒で自動リトライ（3回固定、変更不可）
+リトライ後も 429 が続く場合は、数秒〜数十秒待機して再実行する
 ```
 
 **手動回避**:
@@ -302,10 +300,6 @@ Retry-After: 300
 # デバッグ出力の有効化
 export MF_CLI_DEBUG=1
 python3 scripts/mf.py journal list --limit 1 --json
-
-# 詳細エラーメッセージ
-export MF_CLI_VERBOSE=1
-python3 scripts/mf.py auth login
 ```
 
 ### トークンの確認
@@ -318,15 +312,11 @@ cat ~/.mf-cli/tokens.json | jq .
 python3 scripts/mf.py auth status --json | jq '.expires_in'
 ```
 
-### キャッシュの確認・クリア
+### トークンの強制リフレッシュ
 
 ```bash
-# キャッシュなしで実行（検証用）
-MF_NO_CACHE=1 python3 scripts/mf.py journal list --limit 1
-
-# キャッシュ TTL の変更
-export MF_CACHE_TTL=0  # キャッシュ無効
-python3 scripts/mf.py journal list
+# アクセストークンを強制更新（launchd/cron での定期更新にも利用可能）
+python3 scripts/mf.py auth refresh
 ```
 
 ---
@@ -353,7 +343,7 @@ python3 scripts/mf.py journal list
 **A**:
 - ネットワーク接続確認
 - 個別削除でどれが失敗するか特定: `python3 scripts/mf.py journal delete <id>` で1つずつ試行
-- `MF_CLI_RETRY` を増やす: `export MF_CLI_RETRY=5`
+- レート制限（429）の場合は数秒待機してから再実行（自動リトライは3回固定）
 
 ### Q4: CSV/JSON エクスポートが文字化けする
 
@@ -377,10 +367,6 @@ python3 scripts/mf.py journal list --limit 1 && echo "✅ API OK"
 
 # パーミッションテスト（write）
 python3 scripts/mf.py journal list --limit 1 | head -1 && echo "✅ Read OK"
-
-# キャッシュテスト
-time python3 scripts/mf.py journal list --limit 1 > /dev/null  # 1回目（キャッシュなし）
-time python3 scripts/mf.py journal list --limit 1 > /dev/null  # 2回目（キャッシュ命中）
 ```
 
 ### 完全診断スクリプト
@@ -399,7 +385,6 @@ python3 scripts/mf.py tenant info --json 2>&1 | head -3
 echo "3. 環境変数"
 echo "  CLIENT_ID: ${MF_CLIENT_ID:0:10}***"
 echo "  DEBUG: ${MF_CLI_DEBUG:-off}"
-echo "  CACHE_TTL: ${MF_CACHE_TTL:-300}"
 
 echo "4. トークンファイル"
 ls -lh ~/.mf-cli/tokens.json 2>/dev/null || echo "  トークンファイルなし（再ログインが必要）"

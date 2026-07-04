@@ -123,7 +123,7 @@
       "name": "mf-cli",
       "source": "./plugins/mf-cli",
       "description": "MoneyForward Cloud Accounting CLI - 仕訳・試算表・マスター情報管理",
-      "version": "1.2.0",
+      "version": "1.4.0",
       "author": {
         "name": "asgr-base"
       },

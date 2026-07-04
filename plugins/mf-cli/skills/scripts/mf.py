@@ -126,71 +126,6 @@ class MFClient:
         self.config = self._load_config()
         self.tokens = self._load_tokens()
         self._office_cache = None
-        self._response_cache = {}  # 応答キャッシュ（get_cache_key で管理）
-        self._cache_ttl = 300  # キャッシュ有効期限（秒）
-
-    # -------------------------
-    # キャッシング・応答処理
-    # -------------------------
-
-    def _get_cache_key(self, method, endpoint):
-        """キャッシュキー生成"""
-        return f"{method}:{endpoint}"
-
-    def _get_cached(self, method, endpoint):
-        """キャッシュから取得"""
-        key = self._get_cache_key(method, endpoint)
-        if key in self._response_cache:
-            cached, timestamp = self._response_cache[key]
-            if time.time() - timestamp < self._cache_ttl:
-                return cached
-            else:
-                del self._response_cache[key]
-        return None
-
-    def _set_cached(self, method, endpoint, response):
-        """キャッシュに保存"""
-        key = self._get_cache_key(method, endpoint)
-        self._response_cache[key] = (response, time.time())
-        return response
-
-    def _normalize_response(self, response):
-        """複雑な応答を正規化（ネスト構造の抽出）"""
-        if not isinstance(response, dict):
-            return response
-
-        # よくあるパターンを検出して正規化
-        if "journals" in response:
-            return response.get("journals", response)
-        elif "rows" in response:
-            return response.get("rows", response)
-        elif "items" in response:
-            return response.get("items", response)
-        elif "accounts" in response:
-            return response.get("accounts", response)
-        elif "data" in response and isinstance(response["data"], list):
-            return response.get("data", response)
-
-        return response
-
-    def _handle_error(self, code, message, details=None):
-        """エラーハンドリング（詳細情報表示）"""
-        error_messages = {
-            400: "リクエストのパラメータが不正です",
-            401: "認証が失敗しました（トークン有効期限切れなど）",
-            403: "事業者に対する権限がありません",
-            404: "リクエストされたリソースが見つかりません",
-            429: "APIレート制限に達しました。しばらく待ってから再試行してください",
-            500: "サーバーエラーが発生しました",
-        }
-
-        error_msg = error_messages.get(code, f"エラーが発生しました（{code}）")
-        print(f"❌ {error_msg}", file=sys.stderr)
-        if message:
-            print(f"   詳細: {message}", file=sys.stderr)
-        if details:
-            print(f"   {details}", file=sys.stderr)
-        return None
 
     # -------------------------
     # 設定・トークン管理
@@ -343,6 +278,8 @@ class MFClient:
     def _refresh_access_token(self):
         """リフレッシュトークンでアクセストークンを更新（CLIENT_SECRET_BASIC）"""
         if not self.tokens.get("refresh_token"):
+            if os.environ.get("MF_CLI_DEBUG"):
+                print("Debug: refresh_token が保存されていません", file=sys.stderr)
             return False
 
         data = urllib.parse.urlencode({
@@ -355,11 +292,28 @@ class MFClient:
             req.add_header("Authorization", self._basic_auth_header())
             with urllib.request.urlopen(req) as resp:
                 result = json.loads(resp.read().decode())
+                if "access_token" not in result:
+                    if os.environ.get("MF_CLI_DEBUG"):
+                        print(f"Debug: リフレッシュレスポンスに access_token がありません: {result}", file=sys.stderr)
+                    return False
                 self.tokens["access_token"] = result["access_token"]
                 self.tokens["expires_at"] = time.time() + result["expires_in"]
+                # 新しい refresh_token が返ってきた場合は更新（ローテーション対応）
+                if result.get("refresh_token"):
+                    self.tokens["refresh_token"] = result["refresh_token"]
                 self._save_tokens()
                 return True
-        except urllib.error.HTTPError:
+        except urllib.error.HTTPError as e:
+            if os.environ.get("MF_CLI_DEBUG"):
+                try:
+                    body = json.loads(e.read().decode())
+                    print(f"Debug: リフレッシュ失敗 HTTP {e.code}: {body}", file=sys.stderr)
+                except Exception:
+                    print(f"Debug: リフレッシュ失敗 HTTP {e.code}", file=sys.stderr)
+            return False
+        except Exception as e:
+            if os.environ.get("MF_CLI_DEBUG"):
+                print(f"Debug: リフレッシュ中の予期しないエラー: {e}", file=sys.stderr)
             return False
 
     def _ensure_valid_token(self):
@@ -380,6 +334,19 @@ class MFClient:
         expires_in = max(0, int(self.tokens.get("expires_at", 0) - time.time()))
         print(f"Status: Authenticated")
         print(f"Expires in: {expires_in} seconds")
+
+    def force_refresh(self):
+        """アクセストークンを強制的に更新する（launchd 等からの定期実行用）"""
+        if not self.tokens.get("refresh_token"):
+            print("Error: refresh_token がありません。`mf auth login` を実行してください", file=sys.stderr)
+            sys.exit(1)
+        print("強制リフレッシュ中...")
+        if self._refresh_access_token():
+            expires_in = max(0, int(self.tokens.get("expires_at", 0) - time.time()))
+            print(f"✓ トークンを更新しました (有効期限: {expires_in}秒)")
+        else:
+            print("Error: トークン更新失敗。`mf auth login` を再実行してください", file=sys.stderr)
+            sys.exit(1)
 
     # -------------------------
     # API 共通ヘルパー
@@ -543,7 +510,8 @@ class MFClient:
         branches = journal_data.get("branches", [])
         for branch in branches:
             for side in ["debitor", "creditor"]:
-                side_data = branch.get(side, {})
+                # キーが存在しても値が null の場合があるため `or {}` で保護
+                side_data = branch.get(side) or {}
 
                 # account_name → account_id
                 if "account_name" in side_data:
@@ -707,45 +675,68 @@ class MFClient:
         return self._api_request("GET", f"/trade_partners?{qs}")
 
     def create_partner(self, data):
-        """取引先作成。
+        """取引先作成（POST /trade_partners）。
 
-        data形式:
-          {
-            "name": "取引先名",           # 必須
-            "search_key": "検索キー",      # 省略可
-            "company_id": "<会社ID>",      # 省略可
-            "memo": "備考"                 # 省略可
-          }
+        data 形式（単一オブジェクト・リスト・ラップ済みのいずれも可）:
+          {"name": "取引先名", "search_key": "...", "invoice_registration_number": "...", "corporate_number": "..."}
+        API 仕様は {"trade_partners": [...]} ラップを要求するため、未ラップなら自動ラップする。
         """
+        if isinstance(data, list):
+            data = {"trade_partners": data}
+        elif isinstance(data, dict) and "trade_partners" not in data:
+            data = {"trade_partners": [data]}
         return self._api_request("POST", "/trade_partners", data)
 
     def get_connected_accounts(self):
         """連携サービス一覧取得"""
         return self._api_request("GET", "/connected_accounts")
 
-    def create_transaction(self, data):
-        """取引作成（自動仕訳生成）。
+    def get_term_settings(self):
+        """会計年度設定一覧取得（GET /term_settings、開始日の降順）"""
+        return self._api_request("GET", "/term_settings")
 
-        data形式は OpenAPI 仕様を参照してください。
-        POST /transactions エンドポイント参照。
+    def create_transaction(self, data):
+        """明細作成（POST /transactions、自動仕訳生成の入力）。
+
+        data 形式:
+          {
+            "connected_account_id": "<連携サービスID>",  # 必須（master connected-accounts で取得）
+            "transactions": [                             # 必須（最大1000件）
+              {"date": "2026-06-30", "value": 100, "side": "EXPENSE",  # side: INCOME/EXPENSE
+               "content": "内容", "memo": "備考"}
+            ]
+          }
         """
+        if not isinstance(data, dict) or "connected_account_id" not in data or "transactions" not in data:
+            raise ValueError("connected_account_id と transactions は必須です（OpenAPI: PostTransactionsRequest）")
         return self._api_request("POST", "/transactions", data)
 
     def create_voucher(self, data):
-        """証憑作成。
+        """証憑添付（POST /vouchers）。
 
-        data形式は OpenAPI 仕様を参照してください。
-        POST /vouchers エンドポイント参照。
+        data 形式:
+          {"journal_id": "<仕訳ID>", "voucher_files": [{"file_name": "...", "file_data": "<base64>"}]}
+        ファイルパスから作る場合は create_voucher_from_files() を使用。
         """
         return self._api_request("POST", "/vouchers", data)
 
-    def delete_voucher(self, voucher_id):
-        """証憑削除。
+    def create_voucher_from_files(self, journal_id, file_paths):
+        """証憑添付（ファイルパス指定）。ファイルを読み込み base64 化して送信する。"""
+        voucher_files = []
+        for path in file_paths:
+            with open(path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode("ascii")
+            voucher_files.append({"file_name": os.path.basename(path), "file_data": encoded})
+        return self.create_voucher({"journal_id": journal_id, "voucher_files": voucher_files})
 
-        data形式は OpenAPI 仕様を参照してください。
-        DELETE /vouchers エンドポイント参照。
+    def delete_voucher(self, journal_id, voucher_file_id):
+        """仕訳と証憑の関連付けを解除（DELETE /vouchers）。
+
+        journal_id: 証憑が添付されている仕訳ID
+        voucher_file_id: 添付解除する証憑ID
         """
-        return self._api_request("DELETE", "/vouchers", {"id": voucher_id})
+        return self._api_request("DELETE", "/vouchers",
+                                 {"journal_id": journal_id, "voucher_file_id": voucher_file_id})
 
     # -------------------------
     # ユーティリティ（自動フェッチ・バッチ・エクスポート）
@@ -919,12 +910,15 @@ def main():
     auth_s.add_parser("setup", help="Client ID / Secret を設定")
     auth_s.add_parser("login", help="OAuth ログイン")
     auth_s.add_parser("status", help="認証状態確認")
+    auth_s.add_parser("refresh", help="アクセストークンを強制更新（定期実行用）")
 
     # tenant
     tenant_p = sub.add_parser("tenant", help="事業者コマンド")
     tenant_s = tenant_p.add_subparsers(dest="tenant_cmd")
     info_t = tenant_s.add_parser("info", help="事業者情報取得")
     info_t.add_argument("--json", action="store_true", help="JSON形式で出力")
+    terms_t = tenant_s.add_parser("terms", help="会計年度設定一覧（開始日の降順）")
+    terms_t.add_argument("--json", action="store_true", help="JSON形式で出力")
 
     # journal
     journal_p = sub.add_parser("journal", help="仕訳コマンド")
@@ -988,15 +982,41 @@ def main():
     tr.add_argument("--include-tax", dest="include_tax", action="store_true", help="税込で算出")
     tr.add_argument("--json", action="store_true", help="JSON形式で出力")
 
+    # txn（明細: 自動仕訳生成の入力）
+    txn_p = sub.add_parser("txn", help="明細コマンド（POST /transactions）")
+    txn_s = txn_p.add_subparsers(dest="txn_cmd")
+    create_txn = txn_s.add_parser("create", help="明細作成（連携サービスに明細を投入し自動仕訳の入力にする）")
+    create_txn.add_argument("--data", help="JSON データ（文字列または @ファイルパス）")
+    create_txn.add_argument("--json", action="store_true", help="JSON形式で出力")
+
+    # voucher（証憑）
+    voucher_p = sub.add_parser("voucher", help="証憑コマンド")
+    voucher_s = voucher_p.add_subparsers(dest="voucher_cmd")
+    create_v = voucher_s.add_parser("create", help="仕訳に証憑を添付")
+    create_v.add_argument("--journal-id", dest="journal_id", help="添付先の仕訳ID")
+    create_v.add_argument("--file", dest="files", action="append", metavar="PATH",
+                          help="添付ファイルパス（複数指定可。base64 変換は自動）")
+    create_v.add_argument("--data", help="JSON データ（文字列または @ファイルパス。--file の代わりに直接指定）")
+    create_v.add_argument("--json", action="store_true", help="JSON形式で出力")
+    delete_v = voucher_s.add_parser("delete", help="仕訳と証憑の関連付けを解除")
+    delete_v.add_argument("--journal-id", dest="journal_id", required=True, help="証憑が添付されている仕訳ID")
+    delete_v.add_argument("--voucher-file-id", dest="voucher_file_id", required=True, help="添付解除する証憑ID")
+    delete_v.add_argument("--json", action="store_true", help="JSON形式で出力")
+
     # master
     master_p = sub.add_parser("master", help="マスター情報コマンド")
     master_s = master_p.add_subparsers(dest="master_cmd")
+    partners_p = master_s.add_parser("partners", help="取引先（一覧・作成）")
+    partners_s = partners_p.add_subparsers(dest="partners_cmd")
+    create_pt = partners_s.add_parser("create", help="取引先作成")
+    create_pt.add_argument("--data", help="JSON データ（文字列または @ファイルパス。単一オブジェクト/リスト可）")
+    create_pt.add_argument("--json", action="store_true", help="JSON形式で出力")
     for master_cmd in [
         master_s.add_parser("accounts", help="勘定科目"),
         master_s.add_parser("sub-accounts", help="補助科目"),
         master_s.add_parser("taxes", help="税区分"),
         master_s.add_parser("departments", help="部門"),
-        master_s.add_parser("partners", help="取引先"),
+        partners_p,
         master_s.add_parser("connected-accounts", help="連携サービス"),
     ]:
         master_cmd.add_argument("--json", action="store_true", help="JSON形式で出力")
@@ -1022,6 +1042,8 @@ def main():
             client.login()
         elif args.auth_cmd == "status":
             client.status()
+        elif args.auth_cmd == "refresh":
+            client.force_refresh()
         else:
             auth_p.print_help()
 
@@ -1038,6 +1060,14 @@ def main():
                     if periods:
                         p = periods[0]
                         print(f"FY:      {p.get('fiscal_year')} ({p.get('start_date')} ~ {p.get('end_date')})")
+        elif args.tenant_cmd == "terms":
+            result = client.get_term_settings()
+            if result:
+                if args.json:
+                    print_json(result)
+                else:
+                    terms = result.get("term_settings", result) if isinstance(result, dict) else result
+                    print_table(terms, ["start_date", "end_date"])
         else:
             tenant_p.print_help()
 
@@ -1165,6 +1195,45 @@ def main():
         else:
             report_p.print_help()
 
+    elif args.command == "txn":
+        if args.txn_cmd == "create":
+            if not args.data:
+                print("Error: --data に JSON データを指定してください", file=sys.stderr)
+                sys.exit(1)
+            try:
+                result = client.create_transaction(load_data_arg(args.data))
+            except ValueError as e:
+                print(f"Error: {e}", file=sys.stderr)
+                sys.exit(1)
+            if result:
+                print_json(result)
+        else:
+            txn_p.print_help()
+
+    elif args.command == "voucher":
+        if args.voucher_cmd == "create":
+            if args.files and args.data:
+                print("Error: --file と --data は同時に指定できません", file=sys.stderr)
+                sys.exit(1)
+            if args.files:
+                if not args.journal_id:
+                    print("Error: --file 使用時は --journal-id が必須です", file=sys.stderr)
+                    sys.exit(1)
+                result = client.create_voucher_from_files(args.journal_id, args.files)
+            elif args.data:
+                result = client.create_voucher(load_data_arg(args.data))
+            else:
+                print("Error: --file または --data を指定してください", file=sys.stderr)
+                sys.exit(1)
+            if result:
+                print_json(result)
+        elif args.voucher_cmd == "delete":
+            result = client.delete_voucher(args.journal_id, args.voucher_file_id)
+            if result:
+                print_json(result) if args.json else print(get_message("delete_success"))
+        else:
+            voucher_p.print_help()
+
     elif args.command == "master":
         result = None
         keys = ["id", "name"]
@@ -1177,6 +1246,14 @@ def main():
         elif args.master_cmd == "departments":
             result = client.get_departments()
         elif args.master_cmd == "partners":
+            if getattr(args, "partners_cmd", None) == "create":
+                if not args.data:
+                    print("Error: --data に JSON データを指定してください", file=sys.stderr)
+                    sys.exit(1)
+                result = client.create_partner(load_data_arg(args.data))
+                if result:
+                    print_json(result)
+                return
             result = client.get_partners()
             keys = ["id", "name", "search_key"]
         elif args.master_cmd == "connected-accounts":

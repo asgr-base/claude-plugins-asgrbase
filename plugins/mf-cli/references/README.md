@@ -30,13 +30,13 @@
 ---
 
 ### 2. PERFORMANCE_OPTIMIZATION.md
-**パフォーマンス最適化・キャッシング戦略の完全ガイド**
+**パフォーマンス最適化の完全ガイド**
 
 **内容**:
-- キャッシング戦略（TTL、有効期限管理）
+- CLI 外部でのキャッシュ戦略（取得結果のファイル保存・再利用）
 - リクエスト最適化（ページネーション、フィルタ）
 - バッチ処理の最適化
-- JSON 出力の圧縮
+- jq での効率的なフィルタリング
 - 定期実行の効率化
 - ベストプラクティス
 - パフォーマンストラブルシューティング
@@ -53,7 +53,7 @@
 ```
 
 **実感できる高速化**:
-- マスター情報取得: **10倍高速化**（キャッシング）
+- マスター情報の反復参照: **大幅高速化**（ファイル保存 + jq 再利用）
 - バッチ削除: **80%削減**（バッチ処理）
 - CSV エクスポート: **65%削減**（直接出力）
 
@@ -95,7 +95,7 @@
 
 ### ⚡ 実行が遅い場合
 ```
-1. SKILL.md → Configuration & Environment Variables（キャッシング設定確認）
+1. PERFORMANCE_OPTIMIZATION.md → リクエスト最適化・CLI 外部でのキャッシュ戦略
 2. PERFORMANCE_OPTIMIZATION.md → 最適化方法の選択
 ```
 
@@ -122,7 +122,7 @@
 | 質問 | 参照先 |
 |-----|--------|
 | 401/403 エラーが出た | ERROR_CODES_REFERENCE.md → 4xx クライアントエラー |
-| API レート制限に達した | PERFORMANCE_OPTIMIZATION.md → バッチ処理・キャッシング |
+| API レート制限に達した | PERFORMANCE_OPTIMIZATION.md → バッチ処理・リクエスト最適化 |
 | 実行時間が長い | PERFORMANCE_OPTIMIZATION.md → リクエスト最適化 |
 | Python スクリプトを書きたい | ADVANCED_PATTERNS.md → Python スクリプティング |
 | 毎月末にバックアップしたい | ADVANCED_PATTERNS.md → 毎月末の自動バックアップ |
@@ -133,14 +133,13 @@
 ## 📖 ドキュメント構成
 
 ```
-_docs/
+references/
 ├── README.md                           ← このファイル（ナビゲーション）
-├── references/
-│   ├── ERROR_CODES_REFERENCE.md        （HTTP エラー・トラブルシューティング）
-│   ├── PERFORMANCE_OPTIMIZATION.md     （パフォーマンス最適化）
-│   ├── ADVANCED_PATTERNS.md            （スクリプティング・自動化）
-│   └── README.md                       ← このファイル
-│
+├── ERROR_CODES_REFERENCE.md            （HTTP エラー・トラブルシューティング）
+├── PERFORMANCE_OPTIMIZATION.md         （パフォーマンス最適化）
+└── ADVANCED_PATTERNS.md                （スクリプティング・自動化）
+
+_docs/
 ├── IMPLEMENTATION_SUMMARY.md           （v1.1.0 実装内容）
 ├── MEDIUM_LOW_GAPS_IMPLEMENTATION.md   （v1.2.0 実装内容）
 ├── FINAL_IMPLEMENTATION_REPORT.md      （完全実装レポート）
@@ -165,17 +164,17 @@ _docs/
 
 ```bash
 # ディレクトリ内で特定キーワードを検索
-grep -r "キャッシング" _docs/references/
+grep -r "バッチ" references/
 
 # エラーコードで検索
-grep -r "429" _docs/references/
+grep -r "429" references/
 ```
 
 ### プリント・PDF化
 
 ```bash
 # Markdown を PDF に変換（pandoc 利用）
-pandoc _docs/references/ERROR_CODES_REFERENCE.md -o error_codes.pdf
+pandoc references/ERROR_CODES_REFERENCE.md -o error_codes.pdf
 
 # ブラウザのプリント機能で HTML → PDF
 ```

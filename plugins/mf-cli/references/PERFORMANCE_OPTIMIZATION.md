@@ -7,110 +7,56 @@
 
 ## 概要
 
-このドキュメントは、mf-cli のパフォーマンス最適化戦略を体系化した参考資料です。キャッシング、バッチ処理、リクエスト最適化を通じて、実行時間を最大 **95%** 削減できます。
+このドキュメントは、mf-cli のパフォーマンス最適化戦略を体系化した参考資料です。バッチ処理、リクエスト最適化、CLI 外部でのデータ再利用を通じて、実行時間を大幅に削減できます。
+
+> **前提**: mf-cli 本体にレスポンスキャッシュ機能はありません。すべてのコマンドは実行のたびに API を呼び出します。API 呼び出しを減らしたい場合は、以下の「CLI 外部でのキャッシュ戦略」のように取得結果をファイルに保存して再利用してください。
 
 ---
 
-## 1. キャッシング戦略
+## 1. CLI 外部でのキャッシュ戦略
 
-### 1.1 キャッシングの仕組み
+mf-cli 本体にキャッシュ機能はありませんが、マスター情報（勘定科目・部門・税区分など）は変更頻度が低いため、取得結果をファイルに保存して再利用すると API 呼び出しを削減できます。
 
-**デフォルト設定**:
-- **TTL（Time To Live）**: 300 秒（5分）
-- **対象**: GET リクエスト全般
-- **キャッシュキー**: `{method}:{endpoint}:{params}`
-
-### 1.2 キャッシング有効化
-
-キャッシングは **デフォルトで有効** です。マスター情報は高速に取得できます：
-
-```bash
-# 1回目: API 呼び出し（~500ms）
-time python3 scripts/mf.py master accounts --json
-# real    0m0.523s
-
-# 2回目: キャッシュから取得（~50ms）
-time python3 scripts/mf.py master accounts --json
-# real    0m0.047s
-```
-
-**高速化の実感**: **10倍以上** の高速化
-
-### 1.3 キャッシング無効化
-
-特定の操作でキャッシュをバイパスしたい場合：
-
-```bash
-# キャッシュを無効にして常に API を呼び出す
-export MF_NO_CACHE=1
-python3 scripts/mf.py master accounts --json
-```
-
-**用途**:
-- リアルタイム性が必須の場合
-- キャッシュが古い可能性がある場合
-- デバッグ時
-
-### 1.4 キャッシュ TTL の調整
-
-```bash
-# TTL を延長（10分にキャッシュ）
-export MF_CACHE_TTL=600
-python3 scripts/mf.py master accounts --json
-python3 scripts/mf.py master departments --json  # 同じキャッシュから取得
-
-# TTL を短縮（30秒）
-export MF_CACHE_TTL=30
-python3 scripts/mf.py journal list --limit 10
-sleep 35  # 31秒待機して期限切れ
-python3 scripts/mf.py journal list --limit 10  # 新しいデータ取得
-```
-
-**推奨設定**:
-| シナリオ | TTL | 理由 |
-|--------|-----|------|
-| リアルタイム | 0（無効化） | 常に最新データ必要 |
-| 一般的な使用 | 300（デフォルト） | バランス型 |
-| バッチ処理 | 600-1800 | ネットワーク節約 |
-| 定期同期 | 60 | ほぼリアルタイム |
-
-### 1.5 キャッシュ戦略
-
-#### パターン A: マスター情報の一括取得・キャッシュ
+### 1.1 マスター情報のファイル保存・再利用
 
 ```bash
 #!/bin/bash
-# 初期化時にマスター情報をキャッシュ
+# 初期化時にマスター情報をファイルに保存
 
-echo "📦 マスター情報をキャッシュに読み込み中..."
+CACHE_DIR="./master_cache"
+mkdir -p "$CACHE_DIR"
 
-# キャッシュ TTL を延長
-export MF_CACHE_TTL=1800  # 30分
+echo "📦 マスター情報をファイルに保存中..."
 
-# すべてのマスター情報を取得（キャッシュに保存）
-python3 scripts/mf.py master accounts --json > /dev/null
-python3 scripts/mf.py master sub-accounts --json > /dev/null
-python3 scripts/mf.py master departments --json > /dev/null
-python3 scripts/mf.py master taxes --json > /dev/null
-python3 scripts/mf.py master partners --json > /dev/null
+python3 scripts/mf.py master accounts --json > "$CACHE_DIR/accounts.json"
+python3 scripts/mf.py master sub-accounts --json > "$CACHE_DIR/sub_accounts.json"
+python3 scripts/mf.py master departments --json > "$CACHE_DIR/departments.json"
+python3 scripts/mf.py master taxes --json > "$CACHE_DIR/taxes.json"
+python3 scripts/mf.py master partners --json > "$CACHE_DIR/partners.json"
 
-echo "✅ キャッシュ準備完了（30分有効）"
+echo "✅ 保存完了"
 
-# 以降のコマンドはキャッシュから高速取得
-python3 scripts/mf.py journal list --limit 100
+# 以降は API を呼ばずにファイルから jq で参照
+jq -r '.[] | "\(.id)\t\(.name)"' "$CACHE_DIR/accounts.json" | head -10
 ```
 
-#### パターン B: リアルタイム性重視
+### 1.2 保存ファイルの鮮度管理
 
 ```bash
-#!/bin/bash
-# 常に最新データを使用
-
-export MF_NO_CACHE=1
-
-# 各 API 呼び出しが常に新しいデータを取得
-python3 scripts/mf.py journal list --limit 10 --json | jq '.journals[0]'
+# 保存から1日以上経過していたら再取得する例
+CACHE_FILE="./master_cache/accounts.json"
+if [[ -z $(find "$CACHE_FILE" -mtime -1 2>/dev/null) ]]; then
+  python3 scripts/mf.py master accounts --json > "$CACHE_FILE"
+  echo "🔄 マスター情報を再取得しました"
+fi
 ```
+
+**用途の目安**:
+| シナリオ | 方針 |
+|--------|------|
+| リアルタイム性が必要 | 毎回 API を呼び出す（デフォルト動作） |
+| マスター情報の反復参照 | ファイル保存 + jq で再利用 |
+| バッチ処理 | 処理冒頭で一括保存し、処理中はファイル参照 |
 
 ---
 
@@ -255,24 +201,7 @@ echo "✅ バッチ削除完了"
 
 ## 4. JSON 出力の最適化
 
-### 4.1 JSON 圧縮
-
-```bash
-# ❌ デフォルト（見やすいが大きい）
-python3 scripts/mf.py journal list --json | head -20
-# 出力: インデント付き、改行多数
-
-# ✅ 圧縮（ネットワーク効率化）
-export MF_JSON_PRETTY=0
-python3 scripts/mf.py journal list --json
-# 出力: 1行の圧縮 JSON
-```
-
-**削減効果**:
-- **ファイルサイズ**: 40-50% 削減
-- **ネットワーク転送**: 40-50% 削減（外部 API 経由の場合）
-
-### 4.2 jq での効率的なフィルタリング
+### 4.1 jq での効率的なフィルタリング
 
 #### ❌ 複数パイプで処理
 
@@ -349,7 +278,6 @@ done
 # 環境設定
 export MF_CLIENT_ID="..."
 export MF_CLIENT_SECRET="..."
-export MF_CACHE_TTL=1800  # 30分キャッシュ
 
 # ログディレクトリ
 LOG_DIR="/var/log/mf-cli"
@@ -408,11 +336,10 @@ echo "前月データ同期: $(jq length journals_$LAST_MONTH.json) 件"
 
 ### パフォーマンスチェックリスト
 
-- [ ] キャッシング有効化（`MF_CACHE_TTL`）確認
+- [ ] マスター情報はファイル保存して再利用（CLI 外部キャッシュ）
 - [ ] 日付範囲で API リクエスト絞り込み（`--from`, `--to`）
 - [ ] 件数上限指定（`--limit`）で不要データ削減
 - [ ] バッチ削除（`batch-delete`）利用
-- [ ] JSON 圧縮（`MF_JSON_PRETTY=0`）考慮
 - [ ] jq での単一パイプ処理
 - [ ] 大規模データはストリーミング処理
 - [ ] 定期実行はスケジューリング分散
@@ -421,7 +348,7 @@ echo "前月データ同期: $(jq length journals_$LAST_MONTH.json) 件"
 
 | 操作 | 目標時間 | 達成方法 |
 |-----|--------|---------|
-| マスター情報取得 | < 100ms | キャッシング |
+| マスター情報の反復参照 | < 100ms | ファイル保存 + jq 再利用 |
 | 仕訳一覧（100件） | < 500ms | フィルタ + --limit |
 | 全仕訳取得（10000件） | < 10秒 | list-all |
 | バッチ削除（100件） | < 5秒 | batch-delete |
@@ -435,12 +362,14 @@ echo "前月データ同期: $(jq length journals_$LAST_MONTH.json) 件"
 
 **原因**: リクエスト数が多すぎる
 
+mf-cli は 429 発生時に自動リトライ3回（指数バックオフ、固定）を行います。それでも多発する場合：
+
 **解決**:
 ```bash
-# 1. キャッシュ TTL を延長
-export MF_CACHE_TTL=600
+# 1. マスター情報はファイル保存して再利用（API 呼び出し削減）
+python3 scripts/mf.py master accounts --json > accounts.json
 
-# 2. バッチ処理で --limit を大きくする
+# 2. バッチ処理で --limit を大きくする（リクエスト回数削減）
 python3 scripts/mf.py journal list --limit 500
 
 # 3. 削除を分散
@@ -454,11 +383,7 @@ sleep 5  # 5秒待機
 
 **解決**:
 ```bash
-# JSON 圧縮
-export MF_JSON_PRETTY=0
-python3 scripts/mf.py journal list --json
-
-# またはストリーミング処理
+# ストリーミング処理でメモリ使用量を抑える
 python3 scripts/mf.py journal list --json | jq -c '.[]' | while read line; do
   echo "$line" | jq '.'
 done
@@ -466,15 +391,13 @@ done
 
 ### 問題: 処理が遅い
 
-**原因**: キャッシング未設定
+**原因**: 同じマスター情報を繰り返し API から取得している
 
 **解決**:
 ```bash
-# キャッシング有効化確認
-echo "キャッシュ TTL: ${MF_CACHE_TTL:-300}"
-
-# 必要に応じて TTL 延長
-export MF_CACHE_TTL=1800
+# マスター情報をファイルに保存して再利用（「1. CLI 外部でのキャッシュ戦略」参照）
+python3 scripts/mf.py master accounts --json > accounts.json
+jq -r '.[] | .id' accounts.json
 ```
 
 ---
