@@ -46,7 +46,7 @@
       "name": "jp-aoiro-accounting",
       "source": "./plugins/jp-aoiro-accounting",
       "description": "青色申告帳簿作成ツール - Markdown + Python",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "asgr-base"
       },
@@ -57,7 +57,7 @@
       "name": "jp-eltax-guide",
       "source": "./plugins/jp-eltax-guide",
       "description": "eLTAX（地方税ポータル）利用ガイド",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "asgr-base"
       },
@@ -79,7 +79,7 @@
       "name": "jp-law-verification",
       "source": "./plugins/jp-law-verification",
       "description": "e-Gov法令API - 日本法令確認スキル",
-      "version": "1.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "asgr-base"
       },
@@ -90,7 +90,7 @@
       "name": "jp-legal-amendment-pdf2md",
       "source": "./plugins/jp-legal-amendment-pdf2md",
       "description": "法令改正PDF→Markdown変換ツール",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "asgr-base"
       },
@@ -145,7 +145,7 @@
       "name": "pdf2md-docling",
       "source": "./plugins/pdf2md-docling",
       "description": "PDF→Markdown変換（Docling）",
-      "version": "1.0.0",
+      "version": "3.20.0",
       "author": {
         "name": "asgr-base"
       },

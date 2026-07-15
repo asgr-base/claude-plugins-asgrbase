@@ -52,6 +52,8 @@ cp -r claude-plugins-asgrbase/plugins/jp-law-verification ~/.claude/skills/
 | [claude-insight-reflect](plugins/claude-insight-reflect/) | Insightレポート生成・翻訳・CLAUDE.md反映 | 3.0.0 |
 | [learn](plugins/learn/) | セッション振り返りと設定改善提案スキル | 1.0.0 |
 | [marketplace-plugin-manager](plugins/marketplace-plugin-manager/) | マーケットプレイス管理 - プラグイン追加・更新・整合性チェック | 1.2.4 |
+| [pre-publish-audit](plugins/pre-publish-audit/) | 公開前監査スキル - 個人情報・認証情報検出 | 1.0.0 |
+| [skill-scanner](plugins/skill-scanner/) | スキルセキュリティスキャナー - 脅威検出 | 1.0.0 |
 
 ### ドキュメント変換
 
@@ -64,8 +66,9 @@ cp -r claude-plugins-asgrbase/plugins/jp-law-verification ~/.claude/skills/
 
 | スキル名 | 説明 | バージョン |
 |---------|------|-----------|
-| [feedly-intelligence-report](plugins/feedly-intelligence-report/) | Feedly記事のスコアリング・インテリジェンスレポート生成 | - |
-| [openclaw-guide](plugins/openclaw-guide/) | OpenClawセルフホストAIエージェントのセットアップ・セキュリティガイド | - |
+| [feedly-intelligence-report](plugins/feedly-intelligence-report/) | Feedly記事のスコアリング・インテリジェンスレポート生成 | 1.0.0 |
+| [openclaw-guide](plugins/openclaw-guide/) | OpenClawセルフホストAIエージェントのセットアップ・セキュリティガイド | 1.0.0 |
+| [tailscale-guide](plugins/tailscale-guide/) | Tailscaleネットワーク管理・操作ガイド | 1.0.0 |
 
 ## ディレクトリ構成
 
