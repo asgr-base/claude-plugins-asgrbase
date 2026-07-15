@@ -64,7 +64,7 @@ class Yoshiki04Extractor(BaseExtractor):
                 grid_area="notice",
             ))
 
-        # jimusho (日本年金機構 / 港北年金事務所)
+        # jimusho (日本年金機構 / ○○年金事務所)
         jimusho = self.find_by_class(doc, "jimusho")
         if jimusho is not None:
             blocks.append(Block(

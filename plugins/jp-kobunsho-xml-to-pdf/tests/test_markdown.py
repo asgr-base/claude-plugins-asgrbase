@@ -16,11 +16,10 @@ from scripts.lib import md_filters
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
-# 実 fixture (個人事業/法人事業の実 PII を含むため git ignore 済) があるディレクトリ
-_REAL_FIXTURES = (
-    Path.home()
-    / "Obsidian/MyVault/Projects/02_Crecere-LLC/docs/jp-kobunsho-xml-to-pdf"
-)
+# 実 fixture (実 PII を含むためリポジトリには置かない) があるディレクトリ。
+# 環境変数 KOBUNSHO_REAL_FIXTURES で指定した場合のみ実データ検証を行う。
+import os
+_REAL_FIXTURES = Path(os.environ.get("KOBUNSHO_REAL_FIXTURES", "/nonexistent"))
 
 
 def _make_zip(tmp_path: Path, name: str = "test.zip") -> Path:

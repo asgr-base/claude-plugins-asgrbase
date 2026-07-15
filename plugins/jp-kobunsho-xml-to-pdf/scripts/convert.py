@@ -1,17 +1,17 @@
-"""convert.py — e-Gov 公文書 ZIP → PDF / Markdown 変換 (v2.1.0)。
+"""convert.py — e-Gov 公文書 ZIP → PDF / Markdown 変換 (v3.0.0)。
 
-extractors/ (lxml で意味データ抽出) → templates/ (Jinja2 で HTML or Markdown 生成)
-→ css/grid_v2.css (CSS Grid 配置) → WeasyPrint で PDF 化、というパイプライン。
+PDF: XSLT 出力 HTML を Chromium (playwright) でそのまま印刷する忠実再現パイプライン。
+     XSL が唯一のレイアウト定義のため、未知様式も様式別実装なしで原本通りに出る。
+MD:  extractors/ (lxml で意味データ抽出) → templates/*.md.j2 (Jinja2) の v2 経路を維持。
+     検索・引用用のテキスト表現という位置づけ。
 
-XSL の table 入れ子に依存せず、意味データを抽出して div ベースの HTML を再構築する。
-WeasyPrint の border-collapse バグ (Issue #2333 等) を構造的に回避し、
-真のレスポンシブレイアウトと均一な罫線品質を実現する。
-
-v2.1.0: 同じ Document データから Markdown 出力も生成可能 (--format md / both)。
+v3.0.0: PDF を WeasyPrint + 意味抽出から Chromium 忠実印刷へ全面置換。
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -21,13 +21,38 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from lib import zip_handler, xslt_transformer  # noqa: E402
-from lib.form_detector import detect_form, FormSpec  # noqa: E402
-from lib.render_v2 import render_v2, render_v2_markdown  # noqa: E402
+from lib.form_detector import detect_form  # noqa: E402
+from lib.render_v2 import render_v2_markdown  # noqa: E402
+from lib.render_v3 import ChromiumRenderer  # noqa: E402
 
 
 def _log(msg: str, verbose: bool) -> None:
     if verbose:
         print(msg, file=sys.stderr)
+
+
+_STEM_LEN_MAX = 80
+
+
+def _derive_stem(html: str, fallback: str, used: dict[str, int]) -> str:
+    """XSLT 出力 HTML の <title>（公文書の正式名称）を出力ファイル名にする。
+
+    <title> が無い/空なら fallback（XML の stem）。同一 ZIP 内で名称が重複する
+    場合は _2, _3... を付与する。
+    """
+    stem = fallback
+    try:
+        from lxml import html as lhtml
+        title = (lhtml.fromstring(html).findtext(".//title") or "").strip()
+        title = re.sub(r"\s+", " ", title)
+        title = re.sub(r'[\\/:*?"<>|]', "_", title)
+        if title:
+            stem = title[:_STEM_LEN_MAX]
+    except Exception:
+        pass
+    n = used.get(stem, 0) + 1
+    used[stem] = n
+    return stem if n == 1 else f"{stem}_{n}"
 
 
 def convert_zip(
@@ -65,58 +90,63 @@ def convert_zip(
         if not xmls:
             raise RuntimeError(f"no .xml files in {zip_path}")
 
-        for xml_path in xmls:
-            xsl_href = zip_handler.parse_xml_stylesheet(xml_path)
-            if not xsl_href:
-                _log(f"SKIP {xml_path.name}: no xml-stylesheet", verbose)
-                continue
-            xsl_path = xml_path.parent / xsl_href
-            if not xsl_path.exists():
-                _log(f"SKIP {xml_path.name}: xsl not found ({xsl_href})", verbose)
-                continue
-
-            try:
-                html = xslt_transformer.transform(xml_path, xsl_path)
-            except xslt_transformer.XSLTError as e:
-                _log(f"XSLT ERROR {xml_path.name}: {e}", verbose)
-                continue
-
-            spec = detect_form(xml_path, xsl_path, html)
-            _log(f"  → form={spec.form_id} paper={spec.paper} conf={spec.confidence:.2f}", verbose)
-
-            if debug_dir is not None:
-                (debug_dir / f"{xml_path.stem}.raw.html").write_text(html, encoding="utf-8")
-
+        used_stems: dict[str, int] = {}
+        with contextlib.ExitStack() as stack:
+            renderer: ChromiumRenderer | None = None
             if output_format in ("pdf", "both"):
-                try:
-                    pdf_bytes = render_v2(
-                        xml_html=html,
-                        form_spec=spec,
-                        base_url=str(xml_path.parent),
-                        debug_dir=debug_dir,
-                    )
-                except Exception as e:
-                    _log(f"PDF RENDER ERROR {xml_path.name}: {e}", verbose)
-                else:
-                    out_path = output_dir / (xml_path.stem + ".pdf")
-                    out_path.write_bytes(pdf_bytes)
-                    outputs.append(out_path)
-                    _log(f"OK [pdf] {xml_path.name} -> {out_path.name}", verbose)
+                # Chromium は 1 プロセスを全 XML で使い回す
+                renderer = stack.enter_context(ChromiumRenderer())
 
-            if output_format in ("md", "both"):
+            for xml_path in xmls:
+                xsl_href = zip_handler.parse_xml_stylesheet(xml_path)
+                if not xsl_href:
+                    _log(f"SKIP {xml_path.name}: no xml-stylesheet", verbose)
+                    continue
+                xsl_path = xml_path.parent / xsl_href
+                if not xsl_path.exists():
+                    _log(f"SKIP {xml_path.name}: xsl not found ({xsl_href})", verbose)
+                    continue
+
                 try:
-                    md_str = render_v2_markdown(
-                        xml_html=html,
-                        form_spec=spec,
-                        debug_dir=debug_dir,
-                    )
-                except Exception as e:
-                    _log(f"MD RENDER ERROR {xml_path.name}: {e}", verbose)
-                else:
-                    out_path = output_dir / (xml_path.stem + ".md")
-                    out_path.write_text(md_str, encoding="utf-8")
-                    outputs.append(out_path)
-                    _log(f"OK [md] {xml_path.name} -> {out_path.name}", verbose)
+                    html = xslt_transformer.transform(xml_path, xsl_path)
+                except xslt_transformer.XSLTError as e:
+                    _log(f"XSLT ERROR {xml_path.name}: {e}", verbose)
+                    continue
+
+                if debug_dir is not None:
+                    (debug_dir / f"{xml_path.stem}.raw.html").write_text(html, encoding="utf-8")
+
+                out_stem = _derive_stem(html, xml_path.stem, used_stems)
+
+                if renderer is not None:
+                    try:
+                        pdf_bytes = renderer.render_pdf(
+                            html, debug_dir=debug_dir, debug_stem=xml_path.stem,
+                        )
+                    except Exception as e:
+                        _log(f"PDF RENDER ERROR {xml_path.name}: {e}", verbose)
+                    else:
+                        out_path = output_dir / (out_stem + ".pdf")
+                        out_path.write_bytes(pdf_bytes)
+                        outputs.append(out_path)
+                        _log(f"OK [pdf] {xml_path.name} -> {out_path.name}", verbose)
+
+                if output_format in ("md", "both"):
+                    spec = detect_form(xml_path, xsl_path, html)
+                    _log(f"  → form={spec.form_id} (md) conf={spec.confidence:.2f}", verbose)
+                    try:
+                        md_str = render_v2_markdown(
+                            xml_html=html,
+                            form_spec=spec,
+                            debug_dir=debug_dir,
+                        )
+                    except Exception as e:
+                        _log(f"MD RENDER ERROR {xml_path.name}: {e}", verbose)
+                    else:
+                        out_path = output_dir / (out_stem + ".md")
+                        out_path.write_text(md_str, encoding="utf-8")
+                        outputs.append(out_path)
+                        _log(f"OK [md] {xml_path.name} -> {out_path.name}", verbose)
 
     return outputs
 
